@@ -12,7 +12,7 @@ struct Message{
 #[get("/api/hello")]
 async fn hello() -> impl Responder{
     HttpResponse::Ok().json(Message {
-        message: "El chuy es puto!".to_string(),
+        message: "Hola Mundo desde Rust".to_string(),
     })
 }
 
