@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faFacebookF, faGoogle, faTwitter } from '@fortawesome/free-brands-svg-icons';
+
 
 const AuthForm: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -13,15 +16,15 @@ const AuthForm: React.FC = () => {
         {/* Logo */}
         <div className="flex justify-center mb-6">
           <img
-            src="/logo.png" // Cambia la ruta según tu logo
+            src="/vitrine-logo.png" // Cambia la ruta según tu logo
             alt="Logo"
-            className="w-16 h-16"
+            className="w-20 h-20"
           />
         </div>
 
         {/* Título */}
         <h2 className="text-2xl font-semibold text-center text-gray-800 mb-4">
-          {isLogin ? 'Sign in' : 'Register'}
+          {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
         </h2>
 
         {/* Formulario */}
@@ -76,9 +79,9 @@ const AuthForm: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 rounded-lg"
+            className="w-full bg-noubeau-blue hover:bg-noubeau-blue-800 text-white font-semibold py-2 rounded-lg"
           >
-            {isLogin ? 'Sign in' : 'Register'}
+            {isLogin ? 'Iniciar Sesión' : 'Registrarse'}
           </button>
         </form>
 
@@ -92,15 +95,15 @@ const AuthForm: React.FC = () => {
         {/* Social Icons */}
         <div className="flex justify-center space-x-4">
           <button className="bg-blue-500 text-white p-2 rounded-full">
-            <i className="fab fa-facebook-f"></i>
+            <FontAwesomeIcon icon={faFacebookF} />
           </button>
           <button className="bg-red-500 text-white p-2 rounded-full">
-            <i className="fab fa-google"></i>
+            <FontAwesomeIcon icon={faGoogle} />
           </button>
           <button className="bg-blue-400 text-white p-2 rounded-full">
-            <i className="fab fa-twitter"></i>
-          </button>
-        </div>
+            <FontAwesomeIcon icon={faTwitter} />
+            </button>
+            </div>
       </div>
     </div>
   );
