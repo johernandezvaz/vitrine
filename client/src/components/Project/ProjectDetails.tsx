@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext"; // Contexto para manejar el
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>(); // Captura el ID desde la URL
   const { token } = useAuth(); // Obtén el token del usuario
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [project, setProject] = useState<any>(null); // Estado para guardar los detalles del proyecto
   const [error, setError] = useState<string | null>(null); // Estado para manejar errores
   const [loading, setLoading] = useState<boolean>(true); // Estado para mostrar un indicador de carga
@@ -19,6 +20,7 @@ const ProjectDetails: React.FC = () => {
       }
       const data = await getProjectById(Number(projectId), token);
       setProject(data);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || "Error al cargar los detalles del proyecto.");
     } finally {

@@ -27,6 +27,7 @@ const ProjectUpdate: React.FC = () => {
         description: data.description,
         status: data.status,
       });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || "Error al cargar los detalles del proyecto.");
     } finally {
@@ -53,6 +54,7 @@ const ProjectUpdate: React.FC = () => {
       await updateProject(Number(projectId), project, token);
       alert("El proyecto se ha actualizado correctamente.");
       navigate(`/projects/${projectId}`); // Redirige a la página de detalles del proyecto
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || "Error al actualizar el proyecto.");
     }
