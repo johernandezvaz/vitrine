@@ -2,40 +2,56 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
-import ProjectUpdate from "../components/Project/ProjectUpdate";
+import ProjectUpdate, { Update } from "../components/Project/ProjectUpdate";
+
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: string;
+  owner?: {
+    name: string;
+  };
+  updates: Update[];
+}
 
 const ProjectDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { token } = useAuth();
   const navigate = useNavigate();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [project, setProject] = useState<any | null>(null);
+  const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProjectDetails = async () => {
+      if (!token) {
+        setError("No se ha encontrado un token de autenticación.");
+        setLoading(false);
+        return;
+      }
+
       try {
         const response = await fetch(`/api/projects/${id}`, {
           headers: {
-            Authorization: `Bearer ${user?.token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         if (!response.ok) {
           throw new Error("Error al cargar los detalles del proyecto.");
         }
-        const data = await response.json();
+        const data: Project = await response.json();
         setProject(data);
       } catch (err) {
-        setError(err.message);
+        setError(err instanceof Error ? err.message : "Error desconocido al cargar los detalles del proyecto.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchProjectDetails();
-  }, [id, user?.token]);
+  }, [id, token]);
 
   if (loading) return <p className="text-center">Cargando...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
@@ -71,8 +87,14 @@ const ProjectDetails: React.FC = () => {
         <div className="mt-6">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Actualizaciones</h2>
           {project.updates && project.updates.length > 0 ? (
-            project.updates.map((update: any) => (
-              <ProjectUpdate key={update.id} update={update} />
+            project.updates.map((update) => (
+                <ProjectUpdate 
+                project={update} 
+                onUpdate={(updatedUpdate) => {
+                  // Lógica para manejar la actualización
+                  console.log("Actualización guardada:", updatedUpdate);
+                }} 
+              />
             ))
           ) : (
             <p className="text-gray-600">No hay actualizaciones disponibles.</p>
