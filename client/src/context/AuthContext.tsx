@@ -10,27 +10,30 @@ type User = {
 
 type AuthContextType = {
   user: User | null;
+  token: string | null;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 };
 
-export const AuthContext = createContext<AuthContextType | undefined>(
-  undefined
-);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 type AuthProviderProps = {
   children: ReactNode;
 };
 
-const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Carga el usuario desde el almacenamiento local si existe
     const storedUser = localStorage.getItem("user");
+    const storedToken = localStorage.getItem("token");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+    }
+    if (storedToken) {
+      setToken(storedToken);
     }
   }, []);
 
@@ -51,12 +54,12 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = await response.json();
       const { user, token } = data;
 
-      // Guarda el usuario y token en localStorage
       localStorage.setItem("user", JSON.stringify(user));
       localStorage.setItem("token", token);
 
       setUser(user);
-      navigate("/dashboard"); // Redirige al dashboard después del login
+      setToken(token);
+      navigate("/dashboard");
     } catch (error) {
       console.error("Error al iniciar sesión:", error);
       throw error;
@@ -64,24 +67,30 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
-    // Limpia el almacenamiento local y el estado del usuario
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setUser(null);
-    navigate("/login"); // Redirige a la página de login
+    setToken(null);
+    navigate("/login");
+  };
+
+  const contextValue: AuthContextType = {
+    user,
+    token,
+    login,
+    logout
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
 };
 
-// Hook personalizado para usar el contexto de autenticación
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error("useAuth debe ser usado dentro de un AuthProvider");
   }
   return context;

@@ -1,22 +1,33 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom"; // Para capturar el ID del proyecto desde la URL y navegar entre páginas
+import { useParams, useNavigate } from "react-router-dom";
 import { getProjectById, updateProject } from "../../api/projects";
-import { useAuth } from "../../context/AuthContext"; // Contexto para manejar el token de usuario
+import { useAuth } from "../../context/AuthContext";
+
+interface Project {
+  title: string;
+  description: string;
+  status: string;
+}
 
 const ProjectUpdate: React.FC = () => {
-  const { projectId } = useParams<{ projectId: string }>(); // Captura el ID del proyecto desde la URL
-  const { token } = useAuth(); // Obtén el token del contexto de autenticación
-  const navigate = useNavigate(); // Para redirigir después de actualizar
-  const [project, setProject] = useState<{ title: string; description: string; status: string }>({
+  const { projectId } = useParams<{ projectId: string }>();
+  const { token } = useAuth();
+  const navigate = useNavigate();
+  const [project, setProject] = useState<Project>({
     title: "",
     description: "",
     status: "in_progress",
-  }); // Estado para almacenar y editar los datos del proyecto
-  const [loading, setLoading] = useState<boolean>(true); // Estado para el indicador de carga
-  const [error, setError] = useState<string | null>(null); // Estado para manejar errores
+  });
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Función para cargar los detalles del proyecto
   const fetchProjectDetails = async () => {
+    if (!token) {
+      setError("No se ha encontrado un token de autenticación. Por favor, inicia sesión nuevamente.");
+      setLoading(false);
+      return;
+    }
+
     try {
       if (!projectId) {
         throw new Error("El ID del proyecto es inválido.");
@@ -27,15 +38,13 @@ const ProjectUpdate: React.FC = () => {
         description: data.description,
         status: data.status,
       });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(err.message || "Error al cargar los detalles del proyecto.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar los detalles del proyecto.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Función para manejar cambios en los campos del formulario
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setProject((prevProject) => ({
@@ -44,38 +53,37 @@ const ProjectUpdate: React.FC = () => {
     }));
   };
 
-  // Función para enviar el formulario
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!token) {
+      setError("No se ha encontrado un token de autenticación. Por favor, inicia sesión nuevamente.");
+      return;
+    }
+
     try {
       if (!projectId) {
         throw new Error("El ID del proyecto es inválido.");
       }
       await updateProject(Number(projectId), project, token);
       alert("El proyecto se ha actualizado correctamente.");
-      navigate(`/projects/${projectId}`); // Redirige a la página de detalles del proyecto
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(err.message || "Error al actualizar el proyecto.");
+      navigate(`/projects/${projectId}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al actualizar el proyecto.");
     }
   };
 
-  // useEffect para cargar los datos al montar el componente
   useEffect(() => {
     fetchProjectDetails();
-  }, [projectId]);
+  }, [projectId, token]);
 
-  // Renderizado mientras los datos están cargando
   if (loading) {
-    return <div>Cargando detalles del proyecto...</div>;
+    return <div className="p-4 text-center">Cargando detalles del proyecto...</div>;
   }
 
-  // Renderizado si ocurre un error
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div className="p-4 text-center text-red-500">Error: {error}</div>;
   }
 
-  // Renderizado del formulario de edición
   return (
     <div className="p-4 max-w-3xl mx-auto bg-white shadow-md rounded-lg">
       <h1 className="text-2xl font-bold mb-4">Actualizar Proyecto</h1>

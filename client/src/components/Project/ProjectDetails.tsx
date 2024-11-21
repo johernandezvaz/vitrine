@@ -1,18 +1,30 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom"; // Para capturar el ID del proyecto desde la URL
+import { useParams } from "react-router-dom";
 import { getProjectById } from "../../api/projects";
-import { useAuth } from "../../context/AuthContext"; // Contexto para manejar el token de usuario
+import { useAuth } from "../../context/AuthContext";
+
+interface Project {
+  id: number;
+  title: string;
+  description: string;
+  status: "in_progress" | "completed" | "on_hold";
+  created_at: string;
+}
 
 const ProjectDetails: React.FC = () => {
-  const { projectId } = useParams<{ projectId: string }>(); // Captura el ID desde la URL
-  const { token } = useAuth(); // Obtén el token del usuario
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [project, setProject] = useState<any>(null); // Estado para guardar los detalles del proyecto
-  const [error, setError] = useState<string | null>(null); // Estado para manejar errores
-  const [loading, setLoading] = useState<boolean>(true); // Estado para mostrar un indicador de carga
+  const { projectId } = useParams<{ projectId: string }>();
+  const { token } = useAuth();
+  const [project, setProject] = useState<Project | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Función para obtener los detalles del proyecto
   const fetchProjectDetails = async () => {
+    if (!token) {
+      setError("No se ha encontrado un token de autenticación. Por favor, inicia sesión nuevamente.");
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       if (!projectId) {
@@ -20,30 +32,25 @@ const ProjectDetails: React.FC = () => {
       }
       const data = await getProjectById(Number(projectId), token);
       setProject(data);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      setError(err.message || "Error al cargar los detalles del proyecto.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al cargar los detalles del proyecto.");
     } finally {
       setLoading(false);
     }
   };
 
-  // useEffect para cargar los datos al montar el componente
   useEffect(() => {
     fetchProjectDetails();
-  }, [projectId]);
+  }, [projectId, token]);
 
-  // Renderizado mientras los datos están cargando
   if (loading) {
-    return <div>Cargando detalles del proyecto...</div>;
+    return <div className="p-4 text-center">Cargando detalles del proyecto...</div>;
   }
 
-  // Renderizado si ocurre un error
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div className="p-4 text-center text-red-500">Error: {error}</div>;
   }
 
-  // Renderizado de los detalles del proyecto
   return (
     <div className="p-4 max-w-3xl mx-auto bg-white shadow-md rounded-lg">
       {project ? (
@@ -52,7 +59,15 @@ const ProjectDetails: React.FC = () => {
           <p className="mb-4 text-gray-600">{project.description}</p>
           <div className="mb-4">
             <span className="font-semibold">Estado:</span>{" "}
-            <span className={`text-${project.status === "completed" ? "green" : project.status === "on_hold" ? "yellow" : "blue"}-600`}>
+            <span 
+              className={`${
+                project.status === "completed" 
+                  ? "text-green-600" 
+                  : project.status === "on_hold" 
+                  ? "text-yellow-600" 
+                  : "text-blue-600"
+              }`}
+            >
               {project.status === "in_progress" ? "En progreso" : project.status === "completed" ? "Completado" : "En espera"}
             </span>
           </div>
