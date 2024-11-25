@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFacebookF, faGoogle, faTwitter } from '@fortawesome/free-brands-svg-icons';
 
-
 const AuthForm: React.FC = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isLogin = location.pathname === '/login';
 
   const toggleForm = () => {
-    setIsLogin(!isLogin);
+    navigate(isLogin ? '/register' : '/login');
   };
 
   return (
@@ -16,7 +17,7 @@ const AuthForm: React.FC = () => {
         {/* Logo */}
         <div className="flex justify-center mb-6">
           <img
-            src="/vitrine-logo.png" // Cambia la ruta según tu logo
+            src="/vitrine-logo.png"
             alt="Logo"
             className="w-20 h-20"
           />
@@ -49,7 +50,6 @@ const AuthForm: React.FC = () => {
             />
           </div>
 
-          {/* Campo de Confirmación de Contraseña para Registro */}
           {!isLogin && (
             <div className="mb-4">
               <label className="block text-gray-600">Confirmar Contraseña</label>
@@ -102,8 +102,8 @@ const AuthForm: React.FC = () => {
           </button>
           <button className="bg-blue-400 text-white p-2 rounded-full">
             <FontAwesomeIcon icon={faTwitter} />
-            </button>
-            </div>
+          </button>
+        </div>
       </div>
     </div>
   );

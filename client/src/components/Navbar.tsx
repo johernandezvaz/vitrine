@@ -55,7 +55,7 @@ const Navbar: React.FC = () => {
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="bg-teal-500 hover:bg-teal-600 px-3 py-2 rounded-md text-sm font-medium"
+                  className="bg-noubeau-blue hover:bg-noubeau-blue-800 px-3 py-2 rounded-md text-sm font-medium"
                 >
                   Cerrar sesión
                 </button>
