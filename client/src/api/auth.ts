@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 
 const API_URL = "http://localhost:5000/api"; // URL base del backend
@@ -12,12 +13,12 @@ interface RegisterData {
   name: string;
   email: string;
   password: string;
-  role: "client" | "provider";
+  role: "user"; // Solo se permite el rol 'user' en el registro
 }
 
 interface AuthResponse {
-  token: string;
-  user: {
+  message: string;
+  user?: {
     id: number;
     name: string;
     email: string;
@@ -25,51 +26,57 @@ interface AuthResponse {
   };
 }
 
-// Función para iniciar sesión
-export const login = async (data: LoginData): Promise<AuthResponse> => {
-  try {
-    const response = await axios.post(`${API_URL}/login`, data);
-    return response.data;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    console.error("Error en el inicio de sesión:", error.response?.data || error.message);
-    throw new Error(error.response?.data?.message || "Error al iniciar sesión");
-  }
+export type UserResponse = {
+  user: {
+    id: string;
+    email: string;
+    role: "client" | "provider";
+  };
 };
+
+// Función para iniciar sesión
+export async function login(data: { email: string; password: string }): Promise<UserResponse> {
+  const response = await fetch("/api/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Error en el inicio de sesión");
+  }
+
+  return response.json(); // Aquí retornamos el objeto esperado
+}
 
 // Función para registrar un nuevo usuario
-export const register = async (data: RegisterData): Promise<AuthResponse> => {
-  try {
-    const response = await axios.post(`${API_URL}/register`, data);
-    return response.data;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } catch (error: any) {
-    console.error("Error en el registro:", error.response?.data || error.message);
-    throw new Error(error.response?.data?.message || "Error al registrar usuario");
-  }
-};
+export async function register(data: { name: string; email: string; password: string; role: "client" | "provider" }): Promise<UserResponse> {
+  const response = await fetch("/api/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
 
-// Función para verificar el token de autenticación
-export const verifyToken = async (token: string): Promise<boolean> => {
+  if (!response.ok) {
+    throw new Error("Error en el registro");
+  }
+
+  return response.json(); // Aquí retornamos el objeto esperado
+}
+
+// Función para verificar la autenticación
+export const isAuthenticated = async (): Promise<boolean> => {
   try {
-    const response = await axios.post(
-      `${API_URL}/verify-token`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    return response.data.valid;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await axios.get(`${API_URL}/dashboard`, { withCredentials: true });
+    return response.status === 200;
   } catch (error: any) {
-    console.error("Error al verificar el token:", error.response?.data || error.message);
-    throw new Error(error.response?.data?.message || "Token inválido");
+    console.error("Usuario no autenticado:", error.response?.data || error.message);
+    return false;
   }
 };
 
 // Función para cerrar sesión
 export const logout = (): void => {
-  localStorage.removeItem("token"); // Elimina el token del almacenamiento local
+  // Aquí podrías implementar una llamada al backend si es necesario limpiar sesiones
+  window.location.href = "/login"; // Redirige al usuario a la página de inicio de sesión
 };
