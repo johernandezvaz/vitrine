@@ -2,7 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import AuthForm from './components/auth/AuthForm';
-import Dashboard from './pages/Dashboard';
+import DashboardClient from './pages/DashboardClient';
+// import DashboardProvider from './pages/DashboardProvider';
 import ProjectDetails from './pages/ProjectDetails';
 import Navbar from './components/Navbar';
 import ProjectUpdate from './components/Project/ProjectUpdate';
@@ -19,7 +20,8 @@ const App: React.FC = () => {
           <Routes>
             {/* Definir las rutas principales */}
             <Route path="/" element={<AuthForm />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard-client" element={<DashboardClient />} />
+            {/* <Route path="/dashboard-provider" element={<DashboardProvider />} /> */}
             <Route path="/projects/:id" element={<ProjectDetails />} />
             <Route
               path="/projects/update/:id"

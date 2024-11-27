@@ -1,8 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
 
-const Dashboard: React.FC = () => {
+const DashboardClient: React.FC = () => {
   const navigate = useNavigate();
 
   const handleNavigation = (path: string) => {
@@ -12,7 +11,6 @@ const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Navbar */}
-      <Navbar />
 
       {/* Dashboard Content */}
       <div className="container mx-auto px-4 py-6">
@@ -50,4 +48,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default DashboardClient;

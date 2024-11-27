@@ -4,27 +4,7 @@ import axios from "axios";
 const API_URL = "http://localhost:5000/api"; // URL base del backend
 
 // Tipos de datos para los endpoints
-interface LoginData {
-  email: string;
-  password: string;
-}
 
-interface RegisterData {
-  name: string;
-  email: string;
-  password: string;
-  role: "user"; // Solo se permite el rol 'user' en el registro
-}
-
-interface AuthResponse {
-  message: string;
-  user?: {
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-  };
-}
 
 export type UserResponse = {
   user: {
@@ -36,7 +16,7 @@ export type UserResponse = {
 
 // Función para iniciar sesión
 export async function login(data: { email: string; password: string }): Promise<UserResponse> {
-  const response = await fetch("/api/login", {
+  const response = await fetch(`${API_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -51,7 +31,7 @@ export async function login(data: { email: string; password: string }): Promise<
 
 // Función para registrar un nuevo usuario
 export async function register(data: { name: string; email: string; password: string; role: "client" | "provider" }): Promise<UserResponse> {
-  const response = await fetch("/api/register", {
+  const response = await fetch(`${API_URL}/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),

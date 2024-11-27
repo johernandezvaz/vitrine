@@ -2,14 +2,17 @@ from flask import Flask, request, jsonify, redirect, url_for
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from config import supabase
+import datetime
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": ["http://localhost:5173"]}})
+
 
 # Ruta de registro
 @app.route('/api/register', methods=['POST'])
 def register():
+    print("Request JSON:", request.json)
     data = request.json
     name = data.get('name')
     email = data.get('email')
@@ -19,16 +22,19 @@ def register():
     if not (name and email and password and role):
         return jsonify({"error": "Todos los campos son obligatorios"}), 400
 
-    if role != 'user':  # Evitar que se creen administradores desde la API.
+    if role != 'client':  # Evitar que se creen administradores desde la API.
         return jsonify({"error": "No puedes registrarte como administrador"}), 403
 
     hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+
+    print(hashed_password)
 
     try:
         response = supabase.table('users').insert({
             "email": email,
             "password": hashed_password,
-            "role": role
+            "role": role,
+            "name": name
         }).execute()
         return jsonify({"message": "Usuario registrado correctamente", "user": response.data}), 201
     except Exception as e:
@@ -46,17 +52,19 @@ def login():
 
     try:
         # Buscar el usuario en la base de datos
-        response = supabase.table('users').select('id, password').eq('email', email).execute()
+        response = supabase.table('users').select('id, password, role').eq('email', email).execute()
         if response.data:
             user = response.data[0]
             if bcrypt.check_password_hash(user['password'], password):
-                return redirect(url_for('dashboard'))
+                # Devolver un JSON con el usuario
+                return jsonify({"user": {"id": user['id'], "role": user['role']}})
         return jsonify({"error": "Credenciales inválidas"}), 401
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
 # Ruta del dashboard
-@app.route('/dashboard', methods=['GET'])
+@app.route('/api/dashboard', methods=['GET'])
 def dashboard():
     return jsonify({"message": "Bienvenido al Dashboard"}), 200
 

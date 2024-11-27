@@ -1,16 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { login, register, UserResponse } from "../../api/auth"; // Importa las funciones de autenticación
+import { useNavigate } from "react-router-dom";
+import { login, register, UserResponse } from "../../api/auth"; 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faFacebookF, faGoogle, faTwitter } from "@fortawesome/free-brands-svg-icons";
 
 const AuthForm: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const isLogin = location.pathname === "/login";
 
-  // Estados para los campos del formulario
+  // Estado para alternar entre login y register
+  const [isLogin, setIsLogin] = useState(true);
+
+  // Estados de los campos
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -18,33 +19,38 @@ const AuthForm: React.FC = () => {
   const [error, setError] = useState("");
 
   const toggleForm = () => {
-    navigate(isLogin ? "/register" : "/login");
+    setIsLogin(!isLogin);
+    setError(""); // Limpia los errores al cambiar de formulario
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      let response: UserResponse;
-      if (isLogin) {
-        response = await login({ email, password });
-      } else {
-        if (password !== confirmPassword) {
-          setError("Las contraseñas no coinciden");
-          return;
+        let response: UserResponse;
+        if (isLogin) {
+            response = await login({ email, password });
+        } else {
+            if (password !== confirmPassword) {
+                setError("Las contraseñas no coinciden");
+                return;
+            }
+            response = await register({ name, email, password, role: "client" });
         }
-        response = await register({ name, email, password, role: "client" }); // Rol por defecto: "client"
-      }
 
-      // Redirección basada en el rol
-      if (response.user.role === "client") {
-        navigate("/dashboard-client");
-      } else if (response.user.role === "provider") {
-        navigate("/dashboard-provider");
-      }
+        if (!response.user) {
+            throw new Error("Respuesta inesperada del servidor");
+        }
+
+        // Redirección basada en el rol
+        if (response.user.role === "client") {
+            navigate("/dashboard-client");
+        } else if (response.user.role === "provider") {
+            navigate("/dashboard-provider");
+        }
     } catch (err: any) {
-      setError(err.message || "Ocurrió un error. Inténtalo nuevamente.");
+        setError(err.message || "Ocurrió un error. Inténtalo nuevamente.");
     }
-  };
+};
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
