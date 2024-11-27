@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify, redirect, url_for
 from flask_bcrypt import Bcrypt
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_cors import CORS
+import jwt
 from config import supabase
 import datetime
 
@@ -51,13 +53,18 @@ def login():
         return jsonify({"error": "Todos los campos son obligatorios"}), 400
 
     try:
-        # Buscar el usuario en la base de datos
         response = supabase.table('users').select('id, password, role').eq('email', email).execute()
         if response.data:
             user = response.data[0]
             if bcrypt.check_password_hash(user['password'], password):
-                # Devolver un JSON con el usuario
-                return jsonify({"user": {"id": user['id'], "role": user['role']}})
+                # Generar un token de acceso
+                payload = {
+                    "user_id": user["id"],
+                    "role": user["role"],
+                    "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)
+                }
+                access_token = jwt.encode(payload, "your-secret-key", algorithm="HS256")
+                return jsonify({"access_token": access_token, "user": {"id": user["id"], "role": user["role"]}})
         return jsonify({"error": "Credenciales inválidas"}), 401
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -65,8 +72,11 @@ def login():
 
 # Ruta del dashboard
 @app.route('/api/dashboard', methods=['GET'])
+@jwt_required()
 def dashboard():
-    return jsonify({"message": "Bienvenido al Dashboard"}), 200
+    # Obtener los datos del usuario del token
+    current_user = get_jwt_identity()
+    return jsonify({"message": f"Bienvenido, usuario {current_user['id']} con rol {current_user['role']}"})
 
 # Ruta para obtener proyectos
 @app.route('/api/projects', methods=['GET'])
@@ -98,6 +108,12 @@ def create_project():
         return jsonify({"message": "Proyecto creado exitosamente", "project": response.data}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/verify-token', methods=['POST'])
+@jwt_required()
+def verify_token():
+    current_user = get_jwt_identity()
+    return jsonify({"user": current_user}), 200
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000)

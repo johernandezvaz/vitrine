@@ -26,31 +26,37 @@ const AuthForm: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-        let response: UserResponse;
-        if (isLogin) {
-            response = await login({ email, password });
-        } else {
-            if (password !== confirmPassword) {
-                setError("Las contraseñas no coinciden");
-                return;
-            }
-            response = await register({ name, email, password, role: "client" });
+      let response: UserResponse;
+      if (isLogin) {
+        response = await login({ email, password });
+      } else {
+        if (password !== confirmPassword) {
+          setError("Las contraseñas no coinciden");
+          return;
         }
+        response = await register({ name, email, password, role: "client" });
+      }
 
-        if (!response.user) {
-            throw new Error("Respuesta inesperada del servidor");
-        }
+      if (!response.access_token) {
+        throw new Error("Respuesta inesperada del servidor");
+      }
 
-        // Redirección basada en el rol
-        if (response.user.role === "client") {
-            navigate("/dashboard-client");
-        } else if (response.user.role === "provider") {
-            navigate("/dashboard-provider");
-        }
+      // Almacenar el token en localStorage
+      localStorage.setItem("authToken", response.access_token);
+
+      // Decodificar el token para redireccionar según el rol
+      const userPayload = JSON.parse(atob(response.access_token.split(".")[1]));
+
+      // Redirección basada en el rol
+      if (userPayload.role === "client") {
+        navigate("/dashboard-client");
+      } else if (userPayload.role === "provider") {
+        navigate("/dashboard-provider");
+      }
     } catch (err: any) {
-        setError(err.message || "Ocurrió un error. Inténtalo nuevamente.");
+      setError(err.message || "Ocurrió un error. Inténtalo nuevamente.");
     }
-};
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">

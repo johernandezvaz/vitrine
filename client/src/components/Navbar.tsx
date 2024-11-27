@@ -24,25 +24,30 @@ const Navbar: React.FC = () => {
 
           {/* Links */}
           <div className="hidden md:flex space-x-4">
-            <Link
-              to="/"
-              className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
-            >
-              Inicio
-            </Link>
-            <Link
-              to="/projects"
-              className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
-            >
-              Proyectos
-            </Link>
-            {user?.role === "provider" && (
-              <Link
-                to="/upload"
+            {user ? (
+              <>
+                <Link
+                  to="/profile"
+                  className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
+                >
+                  Perfil
+                </Link>
+                {user.role === "provider" && (
+                  <Link
+                    to="/upload"
+                    className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
+                  >
+                    Subir Archivos
+                  </Link>
+                )}
+              </>
+            ) : (
+              <a
+                href="https://www.noubeau.com/"
                 className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
               >
-                Subir Archivo
-              </Link>
+                Página Principal
+              </a>
             )}
           </div>
 
@@ -50,9 +55,7 @@ const Navbar: React.FC = () => {
           <div className="flex items-center space-x-4">
             {user ? (
               <>
-                <span className="text-sm font-medium">
-                  Hola, {user.name}!
-                </span>
+                <span className="text-sm font-medium">Hola, {user.name}!</span>
                 <button
                   onClick={handleLogout}
                   className="bg-noubeau-blue hover:bg-noubeau-blue-800 px-3 py-2 rounded-md text-sm font-medium"
@@ -60,22 +63,7 @@ const Navbar: React.FC = () => {
                   Cerrar sesión
                 </button>
               </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
-                >
-                  Iniciar sesión
-                </Link>
-                <Link
-                  to="/register"
-                  className="bg-teal-500 hover:bg-teal-600 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Registrarse
-                </Link>
-              </>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

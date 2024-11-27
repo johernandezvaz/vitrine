@@ -7,6 +7,7 @@ const API_URL = "http://localhost:5000/api"; // URL base del backend
 
 
 export type UserResponse = {
+  access_token: string;
   user: {
     id: string;
     email: string;
