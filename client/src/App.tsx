@@ -1,12 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthProvider';
 import AuthForm from './components/auth/AuthForm';
 import DashboardClient from './pages/DashboardClient';
 // import DashboardProvider from './pages/DashboardProvider';
 import ProjectDetails from './pages/ProjectDetails';
 import ProjectUpdate from './components/Project/ProjectUpdate';
 import FileUpload from './components/FileUpload';
+import { AuthProvider } from './context/AuthContext';
 
 const App: React.FC = () => {
   return (

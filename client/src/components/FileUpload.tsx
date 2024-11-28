@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { uploadFile } from "../api/files";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
+
 
 interface FileUploadProps {
   projectId: number;
