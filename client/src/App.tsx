@@ -1,11 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/AuthProvider';
 import AuthForm from './components/auth/AuthForm';
 import DashboardClient from './pages/DashboardClient';
 // import DashboardProvider from './pages/DashboardProvider';
 import ProjectDetails from './pages/ProjectDetails';
-import Navbar from './components/Navbar';
 import ProjectUpdate from './components/Project/ProjectUpdate';
 import FileUpload from './components/FileUpload';
 
@@ -15,7 +14,6 @@ const App: React.FC = () => {
       {/* Mover Router aquí */}
       <AuthProvider>
         {/* AuthProvider envuelto por el Router */}
-        <Navbar /> {/* Navbar sigue siendo visible en todas las páginas */}
         <div className="min-h-screen bg-gray-100">
           <Routes>
             {/* Definir las rutas principales */}

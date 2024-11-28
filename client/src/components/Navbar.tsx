@@ -1,15 +1,9 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
 
   return (
     <nav className="bg-gray-800 text-white shadow-md">
@@ -23,48 +17,40 @@ const Navbar: React.FC = () => {
           </div>
 
           {/* Links */}
-          <div className="hidden md:flex space-x-4">
-            {user ? (
-              <>
-                <Link
-                  to="/profile"
-                  className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
-                >
-                  Perfil
-                </Link>
-                {user.role === "provider" && (
-                  <Link
-                    to="/upload"
-                    className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
-                  >
-                    Subir Archivos
-                  </Link>
-                )}
-              </>
-            ) : (
-              <a
-                href="https://www.noubeau.com/"
+          {user && (
+            <div className="hidden md:flex space-x-4">
+              <Link
+                to="/projects"
                 className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
               >
-                Página Principal
-              </a>
-            )}
-          </div>
+                Proyectos
+              </Link>
+              <Link
+                to="/profile"
+                className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
+              >
+                Perfil
+              </Link>
+              <Link
+                to="/upload"
+                className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
+              >
+                Subir Archivos
+              </Link>
+            </div>
+          )}
 
           {/* User Actions */}
-          <div className="flex items-center space-x-4">
-            {user ? (
-              <>
-                <span className="text-sm font-medium">Hola, {user.name}!</span>
-                <button
-                  onClick={handleLogout}
-                  className="bg-noubeau-blue hover:bg-noubeau-blue-800 px-3 py-2 rounded-md text-sm font-medium"
-                >
-                  Cerrar sesión
-                </button>
-              </>
-            ) : null}
-          </div>
+          {user && (
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={logout}
+                className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Cerrar sesión
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </nav>
