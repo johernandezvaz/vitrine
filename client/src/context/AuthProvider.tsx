@@ -4,6 +4,7 @@ import { AuthContext } from "./AuthContext";
 
 export const AuthProviderWithActions = ({ children }: { children: React.ReactNode }) => {
   const { user, setUser } = useAuth();
+  const { token, setToken } = useAuth();
 
   const login = async (email: string, password: string) => {
     try {
@@ -31,7 +32,7 @@ export const AuthProviderWithActions = ({ children }: { children: React.ReactNod
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, register, logout }}>
+    <AuthContext.Provider value={{ user, setUser, login, register, logout, token, setToken }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AuthForm from './components/auth/AuthForm';
-import DashboardClient from './pages/DashboardClient';
+import DashboardClient from './pages/client/DashboardClient';
 // import DashboardProvider from './pages/DashboardProvider';
 import ProjectDetails from './pages/ProjectDetails';
 import ProjectUpdate from './components/Project/ProjectUpdate';

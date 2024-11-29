@@ -1,18 +1,23 @@
 import { createContext, useState } from "react";
 import { login as apiLogin, register as apiRegister, logout as apiLogout } from "../api/authService";
 
+
+
 export type AuthContextType = {
   user: { id: string; email: string; role: "client" | "provider" } | null;
   setUser: React.Dispatch<React.SetStateAction<AuthContextType["user"]>>;
   login: (email: string, password: string) => Promise<void>;
   register: (data: { name: string; email: string; password: string; role: "client" | "provider" }) => Promise<void>;
   logout: () => void;
+  token: string | null;
+  setToken: (token: string | null) => void;
 };
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthContextType["user"]>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   const login = async (email: string, password: string) => {
     try {
@@ -40,7 +45,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, register, logout }}>
+    <AuthContext.Provider value={{ user, setUser, login, register, logout, token, setToken }}>
       {children}
     </AuthContext.Provider>
   );

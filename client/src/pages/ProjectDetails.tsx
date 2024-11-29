@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
-import Navbar from "../components/Navbar";
+import Navbar from "./client/NavbarCliente";
 import ProjectUpdate, { Update } from "../components/Project/ProjectUpdate";
 
 interface Project {
