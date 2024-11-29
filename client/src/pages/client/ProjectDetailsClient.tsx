@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
-import Navbar from "./client/NavbarCliente";
-import ProjectUpdate, { Update } from "../components/Project/ProjectUpdate";
+import { useAuth } from "../../hooks/useAuth";
+import Navbar from "./NavbarCliente";
+import ProjectUpdate, { Update } from "../../components/Project/ProjectUpdate";
 
 interface Project {
   id: string;

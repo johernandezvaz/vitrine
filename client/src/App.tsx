@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AuthForm from './components/auth/AuthForm';
 import DashboardClient from './pages/client/DashboardClient';
 // import DashboardProvider from './pages/DashboardProvider';
-import ProjectDetails from './pages/ProjectDetails';
+import ProjectDetails from './pages/client/ProjectDetailsClient';
 import ProjectUpdate from './components/Project/ProjectUpdate';
 import FileUpload from './components/FileUpload';
 import { AuthProvider } from './context/AuthContext';

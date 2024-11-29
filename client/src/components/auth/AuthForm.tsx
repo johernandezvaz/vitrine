@@ -48,9 +48,9 @@ const AuthForm: React.FC = () => {
       const userPayload = JSON.parse(atob(response.access_token.split(".")[1]));
       console.log(userPayload);
       // Redirección basada en el rol
-      if (userPayload.sub.role === "client") {
+      if (userPayload.identity.role === "client") {
         navigate("/dashboard-client");
-      } else if (userPayload.sub.role === "provider") {
+      } else if (userPayload.identity.role === "provider") {
         navigate("/dashboard-provider");
       }
     } catch (err: any) {

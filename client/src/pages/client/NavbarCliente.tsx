@@ -6,15 +6,25 @@ const NavbarCliente: React.FC = () => {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch("/api/logout", {
+      const token = localStorage.getItem("authToken");
+
+      if (!token) {
+        console.error("Token no encontrado en el almacenamiento local.");
+        alert("No se encontró token de sesión.");
+        return;
+      }
+
+      console.log("Token encontrado:", token);
+
+      const response = await fetch("http://localhost:5000/api/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
       });
-
       if (response.ok) {
-        // Redirigir a la página principal después de cerrar sesión
+        localStorage.removeItem("authToken");
         navigate("/");
       } else {
         console.error("Error al cerrar sesión:", await response.json());
@@ -27,48 +37,106 @@ const NavbarCliente: React.FC = () => {
   };
 
   return (
-    <nav className="bg-gray-800 text-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
-          {/* Logo */}
-          <div className="flex-shrink-0">
-            <Link to="/" className="text-xl font-bold text-teal-300">
-              Vitrine
-            </Link>
+    <nav className="bg-white h-screen shadow-lg flex flex-col items-center py-4">
+      {/* Logo */}
+      <div className="mb-6">
+        <Link to="/">
+          <div className="w-10 h-10 bg-gray-800 flex items-center justify-center rounded">
+            <span className="text-white font-bold text-lg">V</span>
           </div>
+        </Link>
+      </div>
 
-          {/* Links */}
-          <div className="hidden md:flex space-x-4">
-            <Link
-              to="/projects"
-              className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
-            >
-              Proyectos
-            </Link>
-            <Link
-              to="/profile"
-              className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
-            >
-              Perfil
-            </Link>
-            <Link
-              to="/upload"
-              className="px-3 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
-            >
-              Subir Archivos
-            </Link>
+      {/* Links */}
+      <div className="flex flex-col space-y-4 w-full items-center">
+        <Link
+          to="/dashboard"
+          className="flex items-center space-x-2 px-4 py-2 w-4/5 rounded-lg hover:bg-orange-100 group"
+        >
+          <div className="text-orange-500 group-hover:text-orange-600">
+            <i className="fas fa-th-large"></i>
           </div>
+          <span className="text-gray-700 font-medium group-hover:text-orange-600">
+            Dashboard
+          </span>
+        </Link>
+        <Link
+          to="/projects"
+          className="flex items-center space-x-2 px-4 py-2 w-4/5 rounded-lg hover:bg-gray-100 group"
+        >
+          <div className="text-gray-500 group-hover:text-gray-700">
+            <i className="fas fa-clipboard-list"></i>
+          </div>
+          <span className="text-gray-700 font-medium group-hover:text-gray-700">
+            Projects
+          </span>
+        </Link>
+        <Link
+          to="/tasks"
+          className="flex items-center space-x-2 px-4 py-2 w-4/5 rounded-lg hover:bg-gray-100 group"
+        >
+          <div className="text-gray-500 group-hover:text-gray-700">
+            <i className="fas fa-tasks"></i>
+          </div>
+          <span className="text-gray-700 font-medium group-hover:text-gray-700">
+            My Task
+          </span>
+        </Link>
+        <Link
+          to="/calendar"
+          className="flex items-center space-x-2 px-4 py-2 w-4/5 rounded-lg hover:bg-gray-100 group"
+        >
+          <div className="text-gray-500 group-hover:text-gray-700">
+            <i className="fas fa-calendar-alt"></i>
+          </div>
+          <span className="text-gray-700 font-medium group-hover:text-gray-700">
+            Calendar
+          </span>
+        </Link>
+        <Link
+          to="/time-manage"
+          className="flex items-center space-x-2 px-4 py-2 w-4/5 rounded-lg hover:bg-gray-100 group"
+        >
+          <div className="text-gray-500 group-hover:text-gray-700">
+            <i className="fas fa-clock"></i>
+          </div>
+          <span className="text-gray-700 font-medium group-hover:text-gray-700">
+            Time Manage
+          </span>
+        </Link>
+        <Link
+          to="/reports"
+          className="flex items-center space-x-2 px-4 py-2 w-4/5 rounded-lg hover:bg-gray-100 group"
+        >
+          <div className="text-gray-500 group-hover:text-gray-700">
+            <i className="fas fa-chart-bar"></i>
+          </div>
+          <span className="text-gray-700 font-medium group-hover:text-gray-700">
+            Reports
+          </span>
+        </Link>
+        <Link
+          to="/settings"
+          className="flex items-center space-x-2 px-4 py-2 w-4/5 rounded-lg hover:bg-gray-100 group"
+        >
+          <div className="text-gray-500 group-hover:text-gray-700">
+            <i className="fas fa-cog"></i>
+          </div>
+          <span className="text-gray-700 font-medium group-hover:text-gray-700">
+            Settings
+          </span>
+        </Link>
+      </div>
 
-          {/* User Actions */}
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 px-3 py-2 rounded-md text-sm font-medium"
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        </div>
+      {/* Logout */}
+      <div className="mt-auto mb-4 w-full flex justify-center">
+        <button
+          onClick={handleLogout}
+          className="flex items-center space-x-2 px-4 py-2 w-4/5 rounded-lg bg-red-500 hover:bg-red-600 text-white"
+        >
+          <i className="fas fa-sign-out-alt"></i>
+          <span>Cerrar sesión</span>
+        </button>
       </div>
     </nav>
   );
