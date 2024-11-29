@@ -120,36 +120,39 @@ def get_all_projects():
         projects_response = supabase.table("projects").select("*").execute()
         if not projects_response.data:
             return jsonify({"message": "No hay proyectos disponibles"}), 404
-        
+
+        # Logs para verificar la salida
+        print("Proyectos:", projects_response.data)
+
         # Obtener los usuarios relacionados
         user_ids = list(set(project["user_id"] for project in projects_response.data if project["user_id"]))
         users_response = supabase.table("users").select("id, name, email").in_("id", user_ids).execute()
 
         if users_response.error:
+            print("Error al obtener usuarios:", users_response.error)
             return jsonify({"error": "Error al obtener datos de usuarios"}), 500
 
-        # Crear un diccionario de usuarios para acceso rápido
         users_dict = {user["id"]: user for user in users_response.data}
-
-        # Combinar datos de proyectos con datos de usuarios
-        projects_with_users = []
-        for project in projects_response.data:
-            user_data = users_dict.get(project["user_id"], {"name": None, "email": None})
-            projects_with_users.append({
+        projects_with_users = [
+            {
                 "project_id": project["id"],
                 "project_name": project["name"],
                 "project_description": project["description"],
                 "project_status": project["status"],
                 "project_created_at": project["created_at"],
                 "user_id": project["user_id"],
-                "user_name": user_data["name"],
-                "user_email": user_data["email"]
-            })
+                "user_name": users_dict.get(project["user_id"], {}).get("name"),
+                "user_email": users_dict.get(project["user_id"], {}).get("email"),
+            }
+            for project in projects_response.data
+        ]
 
+        print("Respuesta generada:", projects_with_users)
         return jsonify(projects_with_users), 200
-
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print("Error interno:", str(e))
+        return jsonify({"error": "Error interno del servidor"}), 500
+
 
 
 # Ruta para obtener proyectos

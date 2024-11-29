@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AuthForm from './components/auth/AuthForm';
 import DashboardClient from './pages/client/DashboardClient';
 // import DashboardProvider from './pages/DashboardProvider';
-import ProjectDetails from './pages/client/ProjectDetailsClient';
+import ProjectDetailsClient from './pages/client/ProjectDetailsClient';
+import ProjectsClient from './pages/client/ProjectsClient';
 import ProjectUpdate from './components/Project/ProjectUpdate';
 import FileUpload from './components/FileUpload';
 import { AuthProvider } from './context/AuthContext';
@@ -19,8 +20,9 @@ const App: React.FC = () => {
             {/* Definir las rutas principales */}
             <Route path="/" element={<AuthForm />} />
             <Route path="/dashboard-client" element={<DashboardClient />} />
+            <Route path="/projects-client" element={<ProjectsClient />} />
             {/* <Route path="/dashboard-provider" element={<DashboardProvider />} /> */}
-            <Route path="/projects/:id" element={<ProjectDetails />} />
+            <Route path="/projects/:id" element={<ProjectDetailsClient />} />
             <Route
               path="/projects/update/:id"
               element={

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
 import ProjectUpdate, { Update } from "../../components/Project/ProjectUpdate";
 
 interface Project {
@@ -14,9 +13,8 @@ interface Project {
   updates: Update[];
 }
 
-const ProjectDetailsClient: React.FC = () => {
+const ProjectsClient: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { token } = useAuth();
   const navigate = useNavigate();
 
   const [project, setProject] = useState<Project | null>(null);
@@ -25,32 +23,40 @@ const ProjectDetailsClient: React.FC = () => {
 
   useEffect(() => {
     const fetchProjectDetails = async () => {
+      const token = localStorage.getItem("authToken");
       if (!token) {
         setError("No se ha encontrado un token de autenticación.");
         setLoading(false);
         return;
       }
-
+    
       try {
-        const response = await fetch(`/api/projects/${id}`, {
+        const response = await fetch(`/api/all-projects`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+      
         if (!response.ok) {
-          throw new Error("Error al cargar los detalles del proyecto.");
+          const errorText = await response.text(); // Captura la respuesta como texto
+          console.error("Error en respuesta:", errorText);
+          throw new Error(`Error al obtener proyectos: ${response.status}`);
         }
-        const data: Project = await response.json();
-        setProject(data);
+      
+        const data: Project[] = await response.json(); // Intenta parsear como JSON
+        console.log("Datos recibidos:", data);
+        setProject(data[0]); // Ajusta según la estructura
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error desconocido al cargar los detalles del proyecto.");
-      } finally {
+        console.error("Error al cargar datos:", err);
+        setError(err instanceof Error ? err.message : "Error desconocido.");
+      }finally {
         setLoading(false);
       }
     };
+    
 
     fetchProjectDetails();
-  }, [id, token]);
+  }, [id]);
 
   if (loading) return <p className="text-center">Cargando...</p>;
   if (error) return <p className="text-center text-red-500">{error}</p>;
@@ -124,4 +130,4 @@ const ProjectDetailsClient: React.FC = () => {
   );
 };
 
-export default ProjectDetailsClient;
+export default ProjectsClient;
