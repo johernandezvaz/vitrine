@@ -111,17 +111,16 @@ def dashboard():
     return jsonify({"message": f"Bienvenido, usuario {current_user['id']} con rol {current_user['role']}"})
 
 
-# Ruta para obtener todos los proyectos con datos del usuario relacionados
 @app.route('/api/all-projects', methods=['GET'])
 @jwt_required()
 def get_all_projects():
     try:
-        # Obtener todos los proyectos
         projects_response = supabase.table("projects").select("*").execute()
+        
+        # Si no hay proyectos, devolver un mensaje claro
         if not projects_response.data:
-            return jsonify({"message": "No hay proyectos disponibles"}), 404
+            return jsonify({"message": "No hay proyectos disponibles"}), 200
 
-        # Logs para verificar la salida
         print("Proyectos:", projects_response.data)
 
         # Obtener los usuarios relacionados
@@ -149,9 +148,11 @@ def get_all_projects():
 
         print("Respuesta generada:", projects_with_users)
         return jsonify(projects_with_users), 200
+
     except Exception as e:
         print("Error interno:", str(e))
         return jsonify({"error": "Error interno del servidor"}), 500
+
 
 
 
@@ -205,6 +206,14 @@ def check_if_token_in_blocklist(jwt_header, jwt_payload):
         return len(response.data) > 0
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@jwt.unauthorized_loader
+def unauthorized_callback(callback):
+    return jsonify({"error": "Autorización requerida"}), 401
+
+@jwt.invalid_token_loader
+def invalid_token_callback(callback):
+    return jsonify({"error": "Token inválido"}), 422
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5000)
