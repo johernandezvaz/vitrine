@@ -28,6 +28,11 @@ const ProjectsClient: React.FC = () => {
   const [projectsAvailable, setProjectsAvailable] = useState<boolean>(true); // Nuevo estado
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    description: "",
+  });
 
 
 
@@ -86,10 +91,43 @@ const ProjectsClient: React.FC = () => {
     // Lógica para solicitar un nuevo proyecto
   };
 
-  const handleAddProject = () => {
-    console.log("Agregando un nuevo proyecto...");
-    // Lógica para agregar un nuevo proyecto
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+  
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      alert("Token de autenticación no encontrado.");
+      return;
+    }
+  
+    try {
+      const response = await fetch("http://localhost:5000/api/add-project", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+  
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Error al agregar el proyecto");
+      }
+  
+      // Actualiza la lista de proyectos y cierra el formulario
+      setProject(result.project);
+      setProjectsAvailable(true);
+      setFormData({ name: "", description: "" }); // Limpia el formulario
+      setIsFormOpen(false); // Cierra el formulario
+      alert("¡Proyecto agregado exitosamente!");
+    } catch (err) {
+      console.error("Error al agregar proyecto:", err);
+      alert(err.message || "Error desconocido");
+    }
   };
+  
+  
 
   if (loading) {
     return <p className="text-center">Cargando...</p>;
@@ -205,11 +243,76 @@ const ProjectsClient: React.FC = () => {
                 Solicitar Proyecto
               </button>
               <button
-                onClick={handleAddProject}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-              >
-                Agregar Proyecto
-              </button>
+  onClick={() => setIsFormOpen(true)}
+  className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-700"
+>
+  Agregar Proyecto
+</button>
+
+{isFormOpen && (
+  <div className="fixed inset-0 flex items-center justify-center bg-gray-100 bg-opacity-75">
+    <div className="bg-white w-full max-w-md rounded-xl shadow-lg p-8">
+      <h2 className="text-2xl font-bold text-gray-800 text-center mb-6">
+        Agregar Proyecto
+      </h2>
+      <form onSubmit={handleFormSubmit} className="space-y-5">
+        <div>
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Nombre del Proyecto
+          </label>
+          <input
+            id="name"
+            type="text"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            required
+            className="mt-1 w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300"
+            placeholder="Ingresa el nombre del proyecto"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="description"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Descripción
+          </label>
+          <textarea
+            id="description"
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+            required
+            className="mt-1 w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 border-gray-300"
+            placeholder="Describe el proyecto"
+          ></textarea>
+        </div>
+        <div>
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium shadow-md hover:bg-blue-700"
+          >
+            Guardar
+          </button>
+        </div>
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => setIsFormOpen(false)}
+            className="text-blue-500 hover:underline text-sm"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
             </div>
           )}
         </div>

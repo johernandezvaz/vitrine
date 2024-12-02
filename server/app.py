@@ -186,6 +186,46 @@ def create_project():
         return jsonify({"message": "Proyecto creado exitosamente", "project": response.data}), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+@app.route("/api/add-project", methods=["POST"])
+@jwt_required()
+def add_project():
+    try:
+        # Obtén la identidad del usuario desde el token
+        jwt_identity = get_jwt_identity()
+
+        # Extrae solo el 'id' del usuario
+        user_id = jwt_identity["id"] if isinstance(jwt_identity, dict) else jwt_identity
+
+        # Obtén los datos enviados en la solicitud
+        data = request.json
+
+        # Crea los datos para el proyecto
+        project_data = {
+            "name": data["name"],
+            "description": data["description"],
+            "status": "pending",  # Estado inicial
+            "user_id": user_id,  # Asegúrate de que sea un entero
+            "created_at": datetime.datetime.utcnow().isoformat(),
+        }
+
+        print("Datos del proyecto:", project_data)
+
+        # Inserta el proyecto en la base de datos usando Supabase
+        response = supabase.table("projects").insert(project_data).execute()
+        print("Respuesta de Supabase:", response)
+
+        # Verifica si hubo errores en la respuesta
+        if response.error:
+            return jsonify({"error": response.error.message}), 400
+
+        # Devuelve el primer elemento de los datos insertados
+        return jsonify({"message": "Proyecto creado exitosamente", "project": response.data[0]}), 201
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"error": str(e)}), 500
+
+
 
 # Ruta de verificación de token
 @app.route('/api/verify-token', methods=['POST'])
@@ -193,6 +233,9 @@ def create_project():
 def verify_token():
     current_user = get_jwt_identity()
     return jsonify({"user": current_user}), 200
+
+
+
 
 
 
