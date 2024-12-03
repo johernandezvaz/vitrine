@@ -127,7 +127,7 @@ def get_all_projects():
         user_ids = list(set(project["user_id"] for project in projects_response.data if project["user_id"]))
         users_response = supabase.table("users").select("id, name, email").in_("id", user_ids).execute()
 
-        if users_response.error:
+        if not users_response.data:
             print("Error al obtener usuarios:", users_response.error)
             return jsonify({"error": "Error al obtener datos de usuarios"}), 500
 
@@ -216,7 +216,7 @@ def add_project():
         print("Respuesta de Supabase:", response)
 
         # Verifica si hubo errores en la respuesta
-        if response.error:
+        if not response.data:
             return jsonify({"error": response.error.message}), 400
 
         # Devuelve el primer elemento de los datos insertados

@@ -127,6 +127,8 @@ const ProjectsClient: React.FC = () => {
     }
   };
   
+  console.log(project);
+
   
 
   if (loading) {
@@ -196,23 +198,27 @@ const ProjectsClient: React.FC = () => {
       {/* Main Content */}
       <main className="flex-grow bg-gray-100 p-6">
         <div className="bg-white p-4 rounded-lg shadow-md">
+          
           <button
             onClick={() => navigate("/dashboard-client")}
             className="mb-4 px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
           >
             Volver al dashboard
           </button>
+          
+          
 
           {projectsAvailable && project ? (
             <>
               <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-800">{project.name}</h1>
+                <h1 className="text-2xl font-bold text-gray-800">{project.project_name}</h1>
                 <p className="text-sm text-gray-500">
-                  Creado por: {project.owner?.name || "Desconocido"} el{" "}
-                  {new Date(project.createdAt).toLocaleDateString()}
+                  Creado por: {project.user_name || "Desconocido"} el{" "}
+                  {new Date(project.created_at).toLocaleDateString()}
+                  
                 </p>
               </div>
-              <p className="mt-2 text-gray-600">{project.description}</p>
+              <p className="mt-2 text-gray-600">{project.project_description}</p>
 
               <div className="mt-6">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">Actualizaciones</h2>
@@ -242,12 +248,7 @@ const ProjectsClient: React.FC = () => {
               >
                 Solicitar Proyecto
               </button>
-              <button
-  onClick={() => setIsFormOpen(true)}
-  className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-700"
->
-  Agregar Proyecto
-</button>
+              
 
 {isFormOpen && (
   <div className="fixed inset-0 flex items-center justify-center bg-gray-100 bg-opacity-75">
