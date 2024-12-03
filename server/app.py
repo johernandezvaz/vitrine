@@ -226,6 +226,45 @@ def add_project():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route("/api/cancel-project/<project_id>", methods=["DELETE"])
+@jwt_required()
+def cancel_project(project_id):
+    try:
+        # Obtén la identidad del usuario desde el token
+        jwt_identity = get_jwt_identity()
+
+        # Extrae solo el 'id' del usuario
+        user_id = jwt_identity["id"] if isinstance(jwt_identity, dict) else jwt_identity
+
+        # Verifica si el proyecto pertenece al usuario y no tiene contrato ni comprobante de pago
+        print(response.data)
+        
+        response = supabase.table("projects").select("contract_url, payment_proof_url, user_id").eq("id", project_id).execute()
+
+
+        if not response.data:
+            return jsonify({"error": "Proyecto no encontrado"}), 404
+
+        project = response.data[0]
+
+        # Verifica que el proyecto sea del usuario y que los campos sean NULL
+        if project["user_id"] != user_id:
+            return jsonify({"error": "No tienes permiso para cancelar este proyecto"}), 403
+
+        if project["contract_url"] or project["payment_proof_url"]:
+            return jsonify({"error": "El proyecto no puede ser cancelado porque ya tiene un contrato o comprobante de pago"}), 400
+
+        # Elimina el proyecto de la base de datos
+        delete_response = supabase.table("projects").delete().eq("id", project_id).execute()
+
+        if not delete_response.data:
+            return jsonify({"error": "No se pudo cancelar el proyecto"}), 400
+
+        return jsonify({"message": "Proyecto cancelado exitosamente"}), 200
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"error": str(e)}), 500
+
 
 # Ruta de verificación de token
 @app.route('/api/verify-token', methods=['POST'])

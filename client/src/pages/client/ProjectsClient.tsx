@@ -32,7 +32,7 @@ const ProjectsClient: React.FC = () => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-  });
+  }); 
 
 
 
@@ -40,6 +40,31 @@ const ProjectsClient: React.FC = () => {
     localStorage.removeItem("authToken");
     navigate("/");
   };
+
+  async function cancelProject(projectId) {
+    try {
+        const token = localStorage.getItem("authToken");
+        const response = await fetch(`http://localhost:5000/api/cancel-project/${projectId}`, {
+            method: "DELETE",
+            headers: {
+                "Authorization": `Bearer ${token}`, // Asegúrate de enviar el token JWT
+                "Content-Type": "application/json"
+            }
+        });
+
+        const data = await response.json();
+        console.log(data);
+        if (response.ok) {
+            alert("Proyecto cancelado exitosamente");
+            // Actualiza la lista de proyectos en el frontend
+        } else {
+            alert(`Error: ${data.error}`);
+        }
+    } catch (error) {
+        console.error("Error al cancelar el proyecto:", error);
+    }
+}
+
 
   useEffect(() => {
     const fetchProjectDetails = async () => {
@@ -127,7 +152,7 @@ const ProjectsClient: React.FC = () => {
     }
   };
   
-  console.log(project);
+  // console.log(project);
 
   
 
@@ -217,8 +242,15 @@ const ProjectsClient: React.FC = () => {
                   {new Date(project.created_at).toLocaleDateString()}
                   
                 </p>
-              </div>
+
+              </div>  
               <p className="mt-2 text-gray-600">{project.project_description}</p>
+              <button
+                  onClick={cancelProject}
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red -600 mr-2"
+                >
+                  Cancelar Proyecto
+                </button>
 
               <div className="mt-6">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">Actualizaciones</h2>
@@ -238,16 +270,17 @@ const ProjectsClient: React.FC = () => {
                   )}
                 </div>
               </div>
+              <button
+                  onClick={() => setIsFormOpen(true)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 mr-2"
+                >
+                  Solicitar Proyecto
+                </button>
             </>
           ) : (
             <div className="text-center">
               <p className="text-gray-600 mb-4">No hay proyectos disponibles.</p>
-              <button
-                onClick={handleRequestProject}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 mr-2"
-              >
-                Solicitar Proyecto
-              </button>
+                
               
 
 {isFormOpen && (

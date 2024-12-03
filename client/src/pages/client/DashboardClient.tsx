@@ -130,13 +130,13 @@ const DashboardClient: React.FC = () => {
                   <div
                     key={project.id}
                     className="p-4 bg-gray-100 rounded-lg shadow-md hover:bg-gray-200 cursor-pointer"
-                    onClick={() => navigate(`/projects-client/${project.id}`)}
+                    onClick={() => navigate(`/projects-client/${project.project_id}`)}
                   >
                     <h3 className="font-semibold text-gray-800">
-                      {project.name}
+                      {project.project_name}
                     </h3>
                     <p className="text-sm text-gray-600">
-                      {project.description}
+                      {project.project_description}
                     </p>
                   </div>
                 ))
