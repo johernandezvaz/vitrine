@@ -12,6 +12,8 @@ import DashboardProvider from './pages/provider/DashboardProvider';
 import ProjectsProvider from './pages/provider/ProjectsProvider';
 import ProjectDetailsProvider from './pages/provider/ProjectsDetailsProvider';
 import MessagesProvider from './pages/provider/MessagesProvider';
+import ForgotPassword from './components/auth/ForgotPassword';
+import ResetPassword from './components/auth/ResetPassword';
 
 
 
@@ -31,6 +33,8 @@ const App: React.FC = () => {
             <Route path="/projects-provider" element={<ProjectsProvider />} />
             <Route path="/dashboard-provider" element={<DashboardProvider />} />
             <Route path="/projects/:id" element={<ProjectDetailsClient />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route
               path="/projects/update/:id"
               element={

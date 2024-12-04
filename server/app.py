@@ -8,6 +8,7 @@ from uuid import UUID
 import os
 import mimetypes
 import base64
+import secrets
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -661,7 +662,109 @@ def cancel_project(project_id):
     except Exception as e:
         print("Error:", e)
         return jsonify({"error": str(e)}), 500
+    
 
+@app.route('/api/request-password-reset', methods=['POST'])
+def request_password_reset():
+    data = request.json
+    email = data.get('email')
+    reset_token = data.get('resetToken')
+    
+    if not email or not reset_token:
+        return jsonify({"error": "Email y token son requeridos"}), 400
+
+    try:
+        # Check if user exists
+        user_response = supabase.table('users').select('*').eq('email', email).execute()
+        
+        if not user_response.data:
+            return jsonify({"error": "Usuario no encontrado"}), 404
+
+        # Store reset token with expiration (24 hours)
+        current_time = datetime.datetime.now()
+        expiration = current_time + datetime.timedelta(hours=24)
+        
+        # Format the dates in ISO 8601 format
+        expiration_iso = expiration.strftime('%Y-%m-%dT%H:%M:%S.%f+00:00')
+        
+        reset_data = {
+            "user_id": user_response.data[0]["id"],
+            "token": reset_token,
+            "expires_at": expiration_iso,
+            "used": False
+        }
+        
+        supabase.table('password_resets').insert(reset_data).execute()
+        
+        return jsonify({"message": "Token de restablecimiento creado exitosamente"})
+
+    except Exception as e:
+        print("Error in request_password_reset:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/verify-reset-token', methods=['POST'])
+def verify_reset_token():
+    data = request.json
+    token = data.get('token')
+    
+    if not token:
+        return jsonify({"error": "Token es requerido"}), 400
+
+    try:
+        # Check if token exists and is valid
+        reset_response = supabase.table('password_resets').select('*').eq('token', token).eq('used', False).execute()
+        
+        if not reset_response.data:
+            return jsonify({"error": "Token inválido"}), 400
+
+        reset_data = reset_response.data[0]
+        # Parse the ISO format date string without timezone
+        expires_at = datetime.datetime.strptime(reset_data['expires_at'], '%Y-%m-%dT%H:%M:%S.%f')
+        
+        if datetime.datetime.utcnow() > expires_at:
+            return jsonify({"error": "Token expirado"}), 400
+
+        return jsonify({"valid": True})
+
+    except Exception as e:
+        print("Error in verify_reset_token:", str(e))
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/reset-password', methods=['POST'])
+def reset_password():
+    data = request.json
+    token = data.get('token')
+    new_password = data.get('newPassword')
+    
+    if not token or not new_password:
+        return jsonify({"error": "Token y nueva contraseña son requeridos"}), 400
+
+    try:
+        # Verify token
+        reset_response = supabase.table('password_resets').select('*').eq('token', token).eq('used', False).execute()
+        
+        if not reset_response.data:
+            return jsonify({"error": "Token inválido"}), 400
+
+        reset_data = reset_response.data[0]
+        # Parse the ISO format date string
+        expires_at = datetime.datetime.fromisoformat(reset_data['expires_at'])
+        
+        if datetime.datetime.now() > expires_at:
+            return jsonify({"error": "Token expirado"}), 400
+
+        # Update password
+        hashed_password = bcrypt.generate_password_hash(new_password).decode('utf-8')
+        supabase.table('users').update({"password": hashed_password}).eq('id', reset_data['user_id']).execute()
+        
+        # Mark token as used
+        supabase.table('password_resets').update({"used": True}).eq('token', token).execute()
+        
+        return jsonify({"message": "Contraseña actualizada exitosamente"})
+
+    except Exception as e:
+        print("Error in reset_password:", str(e))
+        return jsonify({"error": str(e)}), 500
 
 # Ruta de verificación de token
 @app.route('/api/verify-token', methods=['POST'])
