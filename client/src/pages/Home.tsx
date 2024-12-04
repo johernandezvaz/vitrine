@@ -1,6 +1,5 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "./client/NavbarCliente";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -8,7 +7,6 @@ const Home: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
-      <Navbar />
 
       {/* Hero Section */}
       <header className="bg-white shadow-md py-10">

@@ -138,12 +138,12 @@ const DashboardClient = () => {
               </p>
             </button>
             <button
-              onClick={() => navigate('/profile')}
+              onClick={() => navigate('/messages-client')}
               className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
             >
-              <h3 className="font-semibold text-purple-700">Mi Perfil</h3>
+              <h3 className="font-semibold text-purple-700">Mis Mensajes</h3>
               <p className="text-sm text-purple-600 mt-1">
-                Actualiza tu información personal
+                Novedades de los proyectos
               </p>
             </button>
           </div>

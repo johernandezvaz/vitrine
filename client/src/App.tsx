@@ -10,6 +10,8 @@ import FileUpload from './components/FileUpload';
 import { AuthProvider } from './context/AuthContext';
 import DashboardProvider from './pages/provider/DashboardProvider';
 import ProjectsProvider from './pages/provider/ProjectsProvider';
+import ProjectDetailsProvider from './pages/provider/ProjectsDetailsProvider';
+import MessagesProvider from './pages/provider/MessagesProvider';
 
 
 
@@ -46,7 +48,8 @@ const App: React.FC = () => {
               }
             />
             <Route path="/messages-client" element={<MessagesClient />} />
-
+            <Route path="/messages-provider" element={<MessagesProvider />} />
+            <Route path="projects-provider/:id" element={<ProjectDetailsProvider />} />
             <Route path="/file-upload" element={<FileUpload projectId={0} />} />
           </Routes>
         </div>

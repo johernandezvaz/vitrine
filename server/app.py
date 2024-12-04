@@ -120,20 +120,24 @@ def dashboard():
 @jwt_required()
 def get_all_projects():
     try:
-        projects_response = supabase.table("projects").select("*").execute()
+        current_user = get_jwt_identity()
         
-        # Si no hay proyectos, devolver un mensaje claro
+        # If user is a client, only show their projects
+        if current_user['role'] == 'client':
+            projects_response = supabase.table("projects").select("*").eq("user_id", current_user['id']).execute()
+        else:
+            # If user is a provider, show all projects
+            projects_response = supabase.table("projects").select("*").execute()
+        
+        # If no projects, return a message
         if not projects_response.data:
             return jsonify({"message": "No hay proyectos disponibles"}), 200
 
-        print("Proyectos:", projects_response.data)
-
-        # Obtener los usuarios relacionados
+        # Get the users related to these projects
         user_ids = list(set(project["user_id"] for project in projects_response.data if project["user_id"]))
         users_response = supabase.table("users").select("id, name, email").in_("id", user_ids).execute()
 
         if not users_response.data:
-            print("Error al obtener usuarios:", users_response.error)
             return jsonify({"error": "Error al obtener datos de usuarios"}), 500
 
         users_dict = {user["id"]: user for user in users_response.data}
@@ -151,7 +155,6 @@ def get_all_projects():
             for project in projects_response.data
         ]
 
-        print("Respuesta generada:", projects_with_users)
         return jsonify(projects_with_users), 200
 
     except Exception as e:
@@ -264,83 +267,266 @@ def upload_project_documents(project_id):
         print(f"Error in upload_project_documents: {str(e)}")
         return jsonify({"error": str(e)}), 500
     
+@app.route('/api/projects/count', methods=['GET'])
+@jwt_required()
+def get_project_count():
+    try:
+        response = supabase.table('projects').select('id', count='exact').execute()
+        return jsonify({"count": response.count}), 200
+    except Exception as e:
+        print(f"Error in get_project_count: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/messages/broadcast', methods=['POST'])
+@jwt_required()
+def broadcast_message():
+    current_user = get_jwt_identity()
+    
+    if current_user['role'] != 'provider':
+        return jsonify({"error": "Solo los proveedores pueden enviar mensajes"}), 403
+        
+    try:
+        data = request.json
+        if 'content' not in data:
+            return jsonify({"error": "El contenido del mensaje es requerido"}), 400
+            
+        # Get all projects
+        projects_response = supabase.table('projects').select('id').execute()
+        if not projects_response.data:
+            return jsonify({"error": "No hay proyectos disponibles"}), 404
+            
+        # Create a message for each project
+        messages = []
+        for project in projects_response.data:
+            message_data = {
+                "project_id": project['id'],
+                "content": data['content'],
+                "sender_id": current_user['id'],
+                "created_at": datetime.datetime.utcnow().isoformat()
+            }
+            messages.append(message_data)
+            
+        # Insert all messages at once
+        response = supabase.table('messages').insert(messages).execute()
+        
+        return jsonify({"message": "Mensajes enviados exitosamente"}), 201
+        
+    except Exception as e:
+        print(f"Error in broadcast_message: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
+
+# Messages routes
 @app.route('/api/messages', methods=['GET'])
 @jwt_required()
 def get_messages():
     try:
         current_user = get_jwt_identity()
-        user_id = current_user.get('id')
-
-        # Get all projects for the user
-        projects_response = supabase.table('projects').select('id, name').eq('user_id', user_id).execute()
         
-        if not projects_response.data:
-            return jsonify([]), 200
+        if current_user['role'] == 'client':
+            # Get projects for this client
+            projects = supabase.table('projects').select('id').eq('user_id', current_user['id']).execute()
+            if not projects.data:
+                return jsonify([])
+            
+            project_ids = [p['id'] for p in projects.data]
+            messages = supabase.table('messages').select('*').in_('project_id', project_ids).execute()
+        else:
+            # Provider sees all messages
+            messages = supabase.table('messages').select('*').execute()
+        
+        if not messages.data:
+            return jsonify([])
 
-        project_ids = [project['id'] for project in projects_response.data]
-        projects_dict = {project['id']: project['name'] for project in projects_response.data}
+        # Get project details for each message
+        project_ids = list(set(msg['project_id'] for msg in messages.data))
+        projects = supabase.table('projects').select('*').in_('id', project_ids).execute()
+        projects_dict = {p['id']: p for p in projects.data}
 
-        # Get all contracts for these projects
-        contracts_response = supabase.table('contracts').select('*').in_('project_id', project_ids).execute()
-
-        # Get all progress updates for these projects
-        updates_response = supabase.table('progress_updates').select('*').in_('project_id', project_ids).execute()
-
-        messages = []
-
-        # Process contracts into messages
-        for contract in contracts_response.data:
-            messages.append({
-                'id': contract['id'],
-                'project_id': contract['project_id'],
-                'type': 'contract',
-                'content': 'Se han subido los documentos del proyecto.',
-                'created_at': contract['created_at'],
-                'project': {'name': projects_dict[contract['project_id']]},
-                'urls': {
-                    'contract_url': contract['contract_url'],
-                    'payment_url': contract['payment_url']
+        # Format messages with project details
+        formatted_messages = []
+        for msg in messages.data:
+            project = projects_dict.get(msg['project_id'], {})
+            formatted_messages.append({
+                'id': msg['id'],
+                'content': msg['content'],
+                'type': msg['type'],
+                'sender_id': msg['sender_id'],
+                'created_at': msg['created_at'],
+                'project': {
+                    'name': project.get('name', 'Unknown Project'),
+                    'user_name': project.get('user_name', 'Unknown User')
                 }
             })
 
-        # Process updates into messages
-        for update in updates_response.data:
-            messages.append({
-                'id': update['id'],
-                'project_id': update['project_id'],
-                'type': 'update',
-                'content': update['update'],
-                'created_at': update['created_at'],
-                'project': {'name': projects_dict[update['project_id']]}
-            })
-
-        # Sort messages by created_at in descending order
-        messages.sort(key=lambda x: x['created_at'], reverse=True)
-
-        return jsonify(messages), 200
+        return jsonify(formatted_messages)
 
     except Exception as e:
-        print(f"Error getting messages: {str(e)}")
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/api/projects/<string:project_id>', methods=['GET'])
+        print(f"Error in get_messages: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+    
+@app.route('/api/projects/<project_id>/updates', methods=['GET'])
 @jwt_required()
-def get_project(project_id):
-    if not is_valid_uuid(project_id):
-        return jsonify({"error": "ID de proyecto inválido"}), 400
+def get_project_updates(project_id):
+    try:
+        response = supabase.table('progress_updates').select('*').eq('project_id', project_id).order('created_at', desc=True).execute()
+        
+        if not response.data:
+            return jsonify([])
+            
+        return jsonify(response.data)
+    except Exception as e:
+        print(f"Error in get_project_updates: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
 
+@app.route('/api/projects/<project_id>/updates', methods=['POST'])
+@jwt_required()
+def add_project_update(project_id):
+    try:
+        data = request.json
+        update_text = data.get('update')
+        
+        if not update_text:
+            return jsonify({"error": "El texto de la actualización es requerido"}), 400
+
+        response = supabase.table('progress_updates').insert({
+            "project_id": project_id,
+            "update": update_text,
+            "created_at": datetime.datetime.utcnow().isoformat()
+        }).execute()
+
+        if not response.data:
+            return jsonify({"error": "Error al crear la actualización"}), 500
+
+        return jsonify(response.data[0]), 201
+    except Exception as e:
+        print(f"Error in add_project_update: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+
+@app.route('/api/projects/<project_id>/messages', methods=['GET'])
+@jwt_required()
+def get_project_messages(project_id):
+    try:
+        response = supabase.table('messages').select('*').eq('project_id', project_id).order('created_at', desc=True).execute()
+        
+        if not response.data:
+            return jsonify([])
+            
+        return jsonify(response.data)
+    except Exception as e:
+        print(f"Error in get_project_messages: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+
+@app.route('/api/messages', methods=['POST'])
+@jwt_required()
+def create_message():
     try:
         current_user = get_jwt_identity()
+        if current_user['role'] != 'provider':
+            return jsonify({"error": "No autorizado"}), 403
+
+        data = request.json
+        project_id = data.get('project_id')
+        content = data.get('content')
+        message_type = data.get('type', 'update')  # Default to 'update' if not specified
+
+
+        print(data)
+        if not all([project_id, content]):
+            return jsonify({"error": "Faltan campos requeridos"}), 400
+
+
+        print(data)
+        message = {
+            'project_id': project_id,
+            'content': content,
+            'type': message_type,
+            'sender_id': current_user['id'],
+            'created_at': datetime.datetime.utcnow().isoformat()
+        }
+
+        response = supabase.table('messages').insert(message).execute()
         
-        # Get project details
-        project_response = supabase.table('projects').select('*').eq('id', project_id).execute()
+        if not response.data:
+            return jsonify({"error": "Error al crear el mensaje"}), 500
+
+        return jsonify(response.data[0]), 201
+
+    except Exception as e:
+        print(f"Error in create_message: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+
+@app.route('/api/projects/<project_id>', methods=['GET'])
+@jwt_required()
+def get_project_details(project_id):
+    current_user = get_jwt_identity()
+
+    print(current_user['role'])
+    try:
+        if current_user['role'] == 'client':
+            # Clients can only see their own projects
+            response = supabase.table('projects').select('*').eq('id', project_id).eq('user_id', current_user['id']).execute()
+        else:
+            # Providers can see all projects
+            response = supabase.table('projects').select('*').eq('id', project_id).execute()
         
-        if not project_response.data:
+        if not response.data:
             return jsonify({"error": "Proyecto no encontrado"}), 404
-
-        return jsonify(project_response.data[0]), 200
-
+            
+        return jsonify(response.data[0])
+    except Exception as e:
+        print(f"Error in get_project_details: {str(e)}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+    
+@app.route('/api/projects/<string:project_id>/status', methods=['PUT'])
+@jwt_required()
+def update_project_status(project_id):
+    try:
+        current_user = get_jwt_identity()
+        if current_user['role'] != 'provider':
+            return jsonify({"error": "Unauthorized"}), 403
+            
+        data = request.json
+        new_status = data.get('status')
+        
+        if not new_status:
+            return jsonify({"error": "Status is required"}), 400
+            
+        response = supabase.table('projects').update({
+            'status': new_status
+        }).eq('id', project_id).execute()
+        
+        return jsonify({"message": "Status updated successfully"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/projects/<string:project_id>/updates', methods=['GET', 'POST'])
+@jwt_required()
+def project_updates(project_id):
+    try:
+        if request.method == 'GET':
+            response = supabase.table('progress_updates').select('*').eq('project_id', project_id).execute()
+            return jsonify(response.data)
+            
+        elif request.method == 'POST':
+            current_user = get_jwt_identity()
+            if current_user['role'] != 'provider':
+                return jsonify({"error": "Unauthorized"}), 403
+                
+            data = request.json
+            update_text = data.get('update')
+            
+            if not update_text:
+                return jsonify({"error": "Update text is required"}), 400
+                
+            response = supabase.table('progress_updates').insert({
+                'project_id': project_id,
+                'update': update_text,
+                'created_at': datetime.datetime.utcnow().isoformat()
+            }).execute()
+            
+            return jsonify(response.data[0]), 201
+            
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

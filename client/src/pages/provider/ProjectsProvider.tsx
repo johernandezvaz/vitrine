@@ -5,7 +5,7 @@ import ProjectCard from "../../components/ProjectCard";
 import { FaSearch, FaFilter } from "react-icons/fa";
 
 interface Project {
-  project_id: number;
+  project_id: string;  // Changed to string for UUID
   project_name: string;
   project_description: string;
   project_status: string;
@@ -16,7 +16,7 @@ interface Project {
 
 const ProjectsProvider: React.FC = () => {
   const navigate = useNavigate();
-  const [projects, setProjects] = useState<Project[]>([]); // Initialize as empty array
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -46,11 +46,9 @@ const ProjectsProvider: React.FC = () => {
 
         const data = await response.json();
         
-        // Ensure data is an array
         if (Array.isArray(data)) {
           setProjects(data);
         } else if (data.message) {
-          // Handle case where API returns a message instead of data
           setProjects([]);
           setError(data.message);
         } else {
@@ -59,7 +57,7 @@ const ProjectsProvider: React.FC = () => {
         }
       } catch (error) {
         setError(error instanceof Error ? error.message : "Error desconocido");
-        setProjects([]); // Ensure projects is always an array
+        setProjects([]);
       } finally {
         setLoading(false);
       }
@@ -71,6 +69,10 @@ const ProjectsProvider: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem("authToken");
     navigate("/");
+  };
+
+  const handleProjectClick = (projectId: string) => {
+    navigate(`/projects-provider/${projectId}`);
   };
 
   const filteredProjects = projects.filter((project) => {
@@ -156,7 +158,13 @@ const ProjectsProvider: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProjects.map((project) => (
-                <ProjectCard key={project.project_id} project={project} />
+                <div
+                  key={project.project_id}
+                  onClick={() => handleProjectClick(project.project_id)}
+                  className="cursor-pointer"
+                >
+                  <ProjectCard project={project} />
+                </div>
               ))}
             </div>
           )}

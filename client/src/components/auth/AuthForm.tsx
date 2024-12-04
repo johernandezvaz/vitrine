@@ -17,10 +17,12 @@ const AuthForm: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const toggleForm = () => {
     setIsLogin(!isLogin);
     setError(""); // Limpia los errores al cambiar de formulario
+    setSuccessMessage(""); // Limpia los mensajes de éxito
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,29 +31,39 @@ const AuthForm: React.FC = () => {
       let response: UserResponse;
       if (isLogin) {
         response = await login({ email, password });
+
+        if (!response.access_token) {
+          throw new Error("Respuesta inesperada del servidor");
+        }
+
+        // Store token and redirect for login
+        localStorage.setItem("authToken", response.access_token);
+        const userPayload = JSON.parse(atob(response.access_token.split(".")[1]));
+        
+        // Redirect based on role
+        if (userPayload.identity.role === "client") {
+          navigate("/dashboard-client");
+        } else if (userPayload.identity.role === "provider") {
+          navigate("/dashboard-provider");
+        }
       } else {
         if (password !== confirmPassword) {
           setError("Las contraseñas no coinciden");
           return;
         }
-        response = await register({ name, email, password, role: "client" });
-      }
-
-      if (!response.access_token) {
-        throw new Error("Respuesta inesperada del servidor");
-      }
-
-      // Almacenar el token en localStorage
-      localStorage.setItem("authToken", response.access_token);
-
-      // Decodificar el token para redireccionar según el rol
-      const userPayload = JSON.parse(atob(response.access_token.split(".")[1]));
-      console.log(userPayload);
-      // Redirección basada en el rol
-      if (userPayload.identity.role === "client") {
-        navigate("/dashboard-client");
-      } else if (userPayload.identity.role === "provider") {
-        navigate("/dashboard-provider");
+        
+        // Register new user
+        await register({ name, email, password, role: "client" });
+        
+        // Show success message and switch to login form
+        setSuccessMessage("Registro exitoso. Por favor, inicie sesión.");
+        setIsLogin(true);
+        
+        // Clear form
+        setName("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
       }
     } catch (err: any) {
       setError(err.message || "Ocurrió un error. Inténtalo nuevamente.");
@@ -70,6 +82,13 @@ const AuthForm: React.FC = () => {
         <h2 className="text-2xl font-semibold text-center text-gray-800 mb-4">
           {isLogin ? "Iniciar Sesión" : "Registrarse"}
         </h2>
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-md">
+            {successMessage}
+          </div>
+        )}
 
         {/* Formulario */}
         <form onSubmit={handleSubmit}>
@@ -144,7 +163,7 @@ const AuthForm: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full bg-noubeau-blue hover:bg-noubeau-blue-800 text-white font-semibold py-2 rounded-lg"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg"
           >
             {isLogin ? "Iniciar Sesión" : "Registrarse"}
           </button>
