@@ -2,8 +2,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login, register, UserResponse } from "../../api/auth"; 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFacebookF, faGoogle, faTwitter } from "@fortawesome/free-brands-svg-icons";
 
 const AuthForm: React.FC = () => {
   const navigate = useNavigate();
@@ -169,25 +167,7 @@ const AuthForm: React.FC = () => {
           </button>
         </form>
 
-        {/* Divider */}
-        <div className="flex items-center my-6">
-          <hr className="flex-grow border-gray-300" />
-          <span className="px-2 text-gray-500">O inicia sesión con:</span>
-          <hr className="flex-grow border-gray-300" />
-        </div>
-
-        {/* Social Icons */}
-        <div className="flex justify-center space-x-4">
-          <button className="bg-blue-500 text-white p-2 rounded-full">
-            <FontAwesomeIcon icon={faFacebookF} />
-          </button>
-          <button className="bg-red-500 text-white p-2 rounded-full">
-            <FontAwesomeIcon icon={faGoogle} />
-          </button>
-          <button className="bg-blue-400 text-white p-2 rounded-full">
-            <FontAwesomeIcon icon={faTwitter} />
-          </button>
-        </div>
+        
       </div>
     </div>
   );
