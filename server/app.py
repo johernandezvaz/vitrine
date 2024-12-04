@@ -277,6 +277,71 @@ def get_project_count():
         print(f"Error in get_project_count: {str(e)}")
         return jsonify({"error": str(e)}), 500
     
+
+# Get user's messages
+@app.route('/api/messages/user', methods=['GET'])
+@jwt_required()
+def get_user_messages():
+    current_user = get_jwt_identity()
+    try:
+        # Get user's projects first
+        projects_response = supabase.table('projects').select('id').eq('user_id', current_user['id']).execute()
+        
+        if not projects_response.data:
+            return jsonify([])
+
+        project_ids = [project['id'] for project in projects_response.data]
+        
+        # Get messages for these projects
+        messages_response = supabase.table('messages').select(
+            'id, content, type, created_at, project_id, projects(name)'
+        ).in_('project_id', project_ids).execute()
+
+        return jsonify(messages_response.data)
+    except Exception as e:
+        print("Error in get_user_messages:", str(e))
+        return jsonify({"error": str(e)}), 500
+
+# Create a new message
+@app.route('/api/messages', methods=['POST'])
+@jwt_required()
+def create_message():
+    current_user = get_jwt_identity()
+    data = request.json
+
+    if not data or not data.get('project_id') or not data.get('content'):
+        return jsonify({"error": "Missing required fields"}), 400
+
+    try:
+        message_data = {
+            "project_id": data['project_id'],
+            "content": data['content'],
+            "type": data.get('type', 'update'),
+            "sender_id": current_user['id'],
+            "created_at": datetime.datetime.utcnow().isoformat()
+        }
+
+        response = supabase.table('messages').insert(message_data).execute()
+        
+        if not response.data:
+            raise Exception("Error creating message")
+
+        return jsonify({"message": "Message created successfully", "data": response.data[0]}), 201
+    except Exception as e:
+        print("Error in create_message:", str(e))
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/api/projects/user', methods=['GET'])
+@jwt_required()
+def get_user_projects():
+    current_user = get_jwt_identity()
+    try:
+        response = supabase.table('projects').select('*').eq('user_id', current_user['id']).execute()
+        return jsonify(response.data)
+    except Exception as e:
+        print("Error in get_user_projects:", str(e))
+        return jsonify({"error": str(e)}), 500
+    
 @app.route('/api/messages/broadcast', methods=['POST'])
 @jwt_required()
 def broadcast_message():
@@ -417,44 +482,7 @@ def get_project_messages(project_id):
         print(f"Error in get_project_messages: {str(e)}")
         return jsonify({"error": "Error interno del servidor"}), 500
 
-@app.route('/api/messages', methods=['POST'])
-@jwt_required()
-def create_message():
-    try:
-        current_user = get_jwt_identity()
-        if current_user['role'] != 'provider':
-            return jsonify({"error": "No autorizado"}), 403
 
-        data = request.json
-        project_id = data.get('project_id')
-        content = data.get('content')
-        message_type = data.get('type', 'update')  # Default to 'update' if not specified
-
-
-        print(data)
-        if not all([project_id, content]):
-            return jsonify({"error": "Faltan campos requeridos"}), 400
-
-
-        print(data)
-        message = {
-            'project_id': project_id,
-            'content': content,
-            'type': message_type,
-            'sender_id': current_user['id'],
-            'created_at': datetime.datetime.utcnow().isoformat()
-        }
-
-        response = supabase.table('messages').insert(message).execute()
-        
-        if not response.data:
-            return jsonify({"error": "Error al crear el mensaje"}), 500
-
-        return jsonify(response.data[0]), 201
-
-    except Exception as e:
-        print(f"Error in create_message: {str(e)}")
-        return jsonify({"error": "Error interno del servidor"}), 500
 
 @app.route('/api/projects/<project_id>', methods=['GET'])
 @jwt_required()

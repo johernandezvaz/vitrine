@@ -129,15 +129,6 @@ const DashboardClient = () => {
               </p>
             </button>
             <button
-              onClick={() => navigate('/support')}
-              className="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-            >
-              <h3 className="font-semibold text-green-700">Soporte Técnico</h3>
-              <p className="text-sm text-green-600 mt-1">
-                Obtén ayuda con tus proyectos
-              </p>
-            </button>
-            <button
               onClick={() => navigate('/messages-client')}
               className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
             >
