@@ -1,130 +1,130 @@
-# Vitrine - Platform for Service Providers and Clients
+# Vitrine - Plataforma para proveedores de servicios y clientes
 
-Vitrine is a modern web-based platform that connects service providers with clients, facilitating project management, document sharing, and communication in a secure and intuitive environment.
+Vitrine es una moderna plataforma web que conecta a los proveedores de servicios con los clientes, facilitando la gestión de proyectos, el intercambio de documentos y la comunicación en un entorno seguro e intuitivo.
 
-## Features
+## Características
 
-- **User Authentication**
-  - Secure login and registration system
-  - Role-based access (Client/Provider)
-  - JWT-based authentication
+- **Autenticación de usuarios**
+- Sistema de registro e inicio de sesión seguro
+- Acceso basado en roles (cliente/proveedor)
+- Autenticación basada en JWT
 
-- **Project Management**
-  - Create and manage projects
-  - Real-time status updates
-  - Document upload and verification
-  - Progress tracking
+- **Gestión de proyectos**
+- Crear y gestionar proyectos
+- Actualizaciones de estado en tiempo real
+- Carga y verificación de documentos
+- Seguimiento del progreso
 
-- **Communication**
-  - Direct messaging between clients and providers
-  - Project updates and notifications
-  - Document sharing capabilities
+- **Comunicación**
+- Mensajería directa entre clientes y proveedores
+- Actualizaciones y notificaciones de proyectos
+- Capacidades para compartir documentos
 
-- **Dashboard**
-  - Custom calendar integration
-  - Project statistics and analytics
-  - Recent activities tracking
-  - Quick access to important features
+- **Panel de control**
+- Integración de calendario personalizado
+- Estadísticas y análisis de proyectos
+- Seguimiento de actividades recientes
+- Acceso rápido a funciones importantes
 
-## Tech Stack
+## Pila tecnológica
 
-### Frontend
-- React with TypeScript
-- Tailwind CSS for styling
-- Lucide React for icons
-- React Router for navigation
-- Zustand for state management
-- Axios for API requests
+### Interfaz de usuario
+- React con TypeScript
+- Tailwind CSS para el estilo
+- Lucide React para íconos
+- React Router para navegación
+- Zustand para la gestión de estados
+- Axios para solicitudes de API
 
 ### Backend
 - Flask (Python)
-- Flask-JWT-Extended for authentication
-- Flask-CORS for cross-origin requests
-- Supabase for database and storage
+- Flask-JWT-Extended para autenticación
+- Flask-CORS para solicitudes de origen cruzado
+- Supabase para base de datos y almacenamiento
 
-## Getting Started
+## Obtención Iniciado
 
-### Prerequisites
-- Node.js (v14 or higher)
-- Python 3.8 or higher
-- pip (Python package manager)
+### Requisitos previos
+- Node.js (v14 o superior)
+- Python 3.8 o superior
+- pip (administrador de paquetes de Python)
 
-### Installation
+### Instalación
 
-1. Clone the repository:
+1. Clonar el repositorio:
 ```bash
 git clone https://github.com/yourusername/vitrine.git
 cd vitrine
 ```
 
-2. Install frontend dependencies:
+2. Instalar las dependencias del frontend:
 ```bash
 npm install
 ```
 
-3. Set up the Python virtual environment:
+3. Configurar el entorno virtual de Python:
 ```bash
 python -m venv server/venv
-source server/venv/bin/activate  # On Windows: server\venv\Scripts\activate
+source server/venv/bin/activate # En Windows: server\venv\Scripts\activate
 cd server
 pip install -r requirements.txt
 ```
 
-4. Create a `.env` file in the server directory with your Supabase credentials:
+4. Crear un archivo `.env` en el directorio del servidor con su Supabase credenciales:
 ```env
 SECRET_KEY=your_secret_key
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_key
+SUPABASE_URL=your_subabase_url
+SUPABASE_KEY=your_subabase_key
 JWT_SECRET_KEY=your_jwt_secret
 ```
 
-### Running the Application
+### Ejecución de la aplicación
 
-1. Start the backend server:
+1. Inicie el servidor backend:
 ```bash
 cd server
 python app.py
 ```
 
-2. In a new terminal, start the frontend development server:
+2. En una nueva terminal, inicie el servidor de desarrollo frontend:
 ```bash
 npm run dev
 ```
 
-The application will be available at `http://localhost:5173`
+La aplicación estará disponible en `http://localhost:5173`
 
-## Project Structure
+## Estructura del proyecto
 
 ```
 vitrine/
 ├── src/
-│   ├── api/           # API integration
-│   ├── components/    # Reusable components
-│   ├── context/       # React context
-│   ├── hooks/         # Custom hooks
-│   ├── pages/         # Page components
-│   ├── types/         # TypeScript types
-│   └── utils/         # Utility functions
+│ ├── api/ # Integración de API
+│ ├── componentes/ # Componentes reutilizables
+│ ├── contexto/ # Contexto de React
+│ ├── hooks/ # Hooks personalizados
+│ ├── pages/ # Componentes de página
+│ ├── types/ # Tipos de TypeScript
+│ └── utils/ # Funciones de utilidad
 ├── server/
-│   ├── app.py         # Flask application
-│   ├── config.py      # Server configuration
-│   └── requirements.txt
+│ ├── app.py # Aplicación Flask
+│ ├── config.py # Configuración del servidor
+│ └── requirements.txt
 └── README.md
 ```
 
-## Contributing
+## Contribuir
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+1. Bifurcar el repositorio
+2. Crear la rama de funciones (`git checkout -b feature/AmazingFeature`)
+3. Confirmar los cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Enviar a la rama (`git push origin feature/AmazingFeature`)
+5. Abrir una solicitud de incorporación de cambios
 
-## License
+## Licencia
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+Este proyecto tiene licencia MIT: consulte el archivo [LICENSE](LICENSE) para obtener más detalles.
 
-## Acknowledgments
+## Agradecimientos
 
 - [React](https://reactjs.org/)
 - [Flask](https://flask.palletsprojects.com/)
