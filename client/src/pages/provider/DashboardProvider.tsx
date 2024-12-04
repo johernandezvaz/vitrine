@@ -15,7 +15,7 @@ interface Project {
   user_email: string;
 }
 
-const DashboardClient = () => {
+const DashboardProvider = () => {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,14 +99,6 @@ const DashboardClient = () => {
       <div className="flex-1 p-6 overflow-y-auto">
         <header className="bg-white shadow-lg rounded-xl mb-6 p-6">
           <h1 className="text-3xl font-bold text-gray-800">Panel de Control</h1>
-          <div className="mt-4">
-            <button
-              onClick={() => navigate('/projects-client/')}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Nuevo Proyecto
-            </button>
-          </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -114,43 +106,9 @@ const DashboardClient = () => {
           <CustomCalendar value={today} />
           <RecentProjects projects={projects} />
         </div>
-
-        {/* Quick Actions Section */}
-        <div className="mt-6 bg-white shadow-lg rounded-xl p-6">
-          <h2 className="text-xl font-semibold mb-4">Acciones Rápidas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button
-              onClick={() => navigate('/projects-client')}
-              className="p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors"
-            >
-              <h3 className="font-semibold text-indigo-700">Ver Todos los Proyectos</h3>
-              <p className="text-sm text-indigo-600 mt-1">
-                Gestiona todos tus proyectos activos
-              </p>
-            </button>
-            <button
-              onClick={() => navigate('/support')}
-              className="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-            >
-              <h3 className="font-semibold text-green-700">Soporte Técnico</h3>
-              <p className="text-sm text-green-600 mt-1">
-                Obtén ayuda con tus proyectos
-              </p>
-            </button>
-            <button
-              onClick={() => navigate('/profile')}
-              className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
-            >
-              <h3 className="font-semibold text-purple-700">Mi Perfil</h3>
-              <p className="text-sm text-purple-600 mt-1">
-                Actualiza tu información personal
-              </p>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
 };
 
-export default DashboardClient;
+export default DashboardProvider;

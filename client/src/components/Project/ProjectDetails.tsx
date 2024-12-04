@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { getProjectById } from "../../api/projects";
-import { useAuth } from "../../context/AuthContext";
+
 
 interface Project {
   id: number;
@@ -13,7 +13,12 @@ interface Project {
 
 const ProjectDetails: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
-  const { token } = useAuth();
+  const token = localStorage.getItem('authToken');
+  
+
+    if (!token) {
+        throw new Error("Respuesta inesperada del servidor");
+      }
   const [project, setProject] = useState<Project | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);

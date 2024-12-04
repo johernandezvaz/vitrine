@@ -2,12 +2,17 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AuthForm from './components/auth/AuthForm';
 import DashboardClient from './pages/client/DashboardClient';
-// import DashboardProvider from './pages/DashboardProvider';
+import MessagesClient from './pages/client/MessagesClient';
 import ProjectDetailsClient from './pages/client/ProjectDetailsClient';
 import ProjectsClient from './pages/client/ProjectsClient';
 import ProjectUpdate from './components/Project/ProjectUpdate';
 import FileUpload from './components/FileUpload';
 import { AuthProvider } from './context/AuthContext';
+import DashboardProvider from './pages/provider/DashboardProvider';
+import ProjectsProvider from './pages/provider/ProjectsProvider';
+
+
+
 
 const App: React.FC = () => {
   return (
@@ -21,7 +26,8 @@ const App: React.FC = () => {
             <Route path="/" element={<AuthForm />} />
             <Route path="/dashboard-client" element={<DashboardClient />} />
             <Route path="/projects-client" element={<ProjectsClient />} />
-            {/* <Route path="/dashboard-provider" element={<DashboardProvider />} /> */}
+            <Route path="/projects-provider" element={<ProjectsProvider />} />
+            <Route path="/dashboard-provider" element={<DashboardProvider />} />
             <Route path="/projects/:id" element={<ProjectDetailsClient />} />
             <Route
               path="/projects/update/:id"
@@ -39,6 +45,8 @@ const App: React.FC = () => {
                 />
               }
             />
+            <Route path="/messages-client" element={<MessagesClient />} />
+
             <Route path="/file-upload" element={<FileUpload projectId={0} />} />
           </Routes>
         </div>

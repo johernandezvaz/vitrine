@@ -4,7 +4,10 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from flask_cors import CORS
 from config import supabase
 import datetime
+from uuid import UUID
 import os
+import mimetypes
+import base64
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,6 +22,8 @@ app.config["JWT_TOKEN_LOCATION"] = ["headers"]
 app.config["JWT_HEADER_NAME"] = "Authorization"
 app.config["JWT_HEADER_TYPE"] = "Bearer"
 jwt = JWTManager(app)
+
+BUCKET_NAME = "project-documents"
 
 
 # Ruta de registro
@@ -153,39 +158,217 @@ def get_all_projects():
         print("Error interno:", str(e))
         return jsonify({"error": "Error interno del servidor"}), 500
 
-
-
-
-# Ruta para obtener proyectos
-@app.route('/api/projects', methods=['GET'])
-def get_projects():
+def is_valid_uuid(uuid_string):
     try:
-        response = supabase.table('projects').select('*').execute()
-        return jsonify(response.data), 200
+        UUID(uuid_string)
+        return True
+    except ValueError:
+        return False
+    
+def ensure_bucket_exists():
+    try:
+        # List all buckets
+        buckets = supabase.storage.list_buckets()
+        bucket_exists = any(bucket.name == BUCKET_NAME for bucket in buckets)
+        
+        if not bucket_exists:
+            # Create the bucket if it doesn't exist
+            supabase.storage.create_bucket(BUCKET_NAME, options={'public': True})
+            print(f"Created bucket: {BUCKET_NAME}")
+        
+        return True
+    except Exception as e:
+        print(f"Error ensuring bucket exists: {str(e)}")
+        return False
+
+def upload_file_to_storage(file_data, file_name):
+    try:
+        # Ensure bucket exists
+        if not ensure_bucket_exists():
+            raise Exception("Failed to ensure bucket exists")
+
+        # Get file extension and content type
+        content_type = mimetypes.guess_type(file_name)[0] or 'application/octet-stream'
+        
+        # Upload to Supabase Storage
+        response = supabase.storage.from_(BUCKET_NAME).upload(
+            path=file_name,
+            file=file_data,
+            file_options={"content-type": content_type}
+        )
+        
+        # Get public URL
+        file_url = supabase.storage.from_(BUCKET_NAME).get_public_url(file_name)
+        return file_url
+    except Exception as e:
+        print(f"Error uploading file: {str(e)}")
+        raise e 
+
+
+
+@app.route('/api/projects/<string:project_id>/upload-documents', methods=['POST', 'OPTIONS'])
+@jwt_required()
+def upload_project_documents(project_id):
+    if request.method == 'OPTIONS':
+        return '', 200
+        
+    if not is_valid_uuid(project_id):
+        return jsonify({"error": "ID de proyecto inválido"}), 400
+
+    try:
+        current_user = get_jwt_identity()
+        
+        if 'contract' not in request.files or 'payment' not in request.files:
+            return jsonify({"error": "Se requieren ambos archivos: contrato y comprobante de pago"}), 400
+
+        contract_file = request.files['contract']
+        payment_file = request.files['payment']
+
+        if not contract_file.filename or not payment_file.filename:
+            return jsonify({"error": "Los archivos no tienen nombre"}), 400
+
+        # Verify project exists and belongs to user
+        project_response = supabase.table('projects').select('*').eq('id', project_id).execute()
+        
+        if not project_response.data:
+            return jsonify({"error": "Proyecto no encontrado"}), 404
+
+        # Generate unique filenames
+        timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+        contract_filename = f"{project_id}_contract_{timestamp}{os.path.splitext(contract_file.filename)[1]}"
+        payment_filename = f"{project_id}_payment_{timestamp}{os.path.splitext(payment_file.filename)[1]}"
+
+        # Upload files to Supabase Storage
+        contract_url = upload_file_to_storage(contract_file.read(), contract_filename)
+        payment_url = upload_file_to_storage(payment_file.read(), payment_filename)
+
+        # Create contract record
+        contract_data = {
+            "project_id": project_id,
+            "contract_url": contract_url,
+            "payment_url": payment_url,
+            "created_at": datetime.datetime.utcnow().isoformat()
+        }
+
+        response = supabase.table('contracts').insert(contract_data).execute()
+
+        if response.data:
+            return jsonify({
+                "message": "Documentos subidos exitosamente",
+                "contract": response.data[0]
+            }), 201
+        else:
+            return jsonify({"error": "Error al guardar los documentos en la base de datos"}), 500
+
+    except Exception as e:
+        print(f"Error in upload_project_documents: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    
+
+@app.route('/api/messages', methods=['GET'])
+@jwt_required()
+def get_messages():
+    try:
+        current_user = get_jwt_identity()
+        user_id = current_user.get('id')
+
+        # Get all projects for the user
+        projects_response = supabase.table('projects').select('id, name').eq('user_id', user_id).execute()
+        
+        if not projects_response.data:
+            return jsonify([]), 200
+
+        project_ids = [project['id'] for project in projects_response.data]
+        projects_dict = {project['id']: project['name'] for project in projects_response.data}
+
+        # Get all contracts for these projects
+        contracts_response = supabase.table('contracts').select('*').in_('project_id', project_ids).execute()
+
+        # Get all progress updates for these projects
+        updates_response = supabase.table('progress_updates').select('*').in_('project_id', project_ids).execute()
+
+        messages = []
+
+        # Process contracts into messages
+        for contract in contracts_response.data:
+            messages.append({
+                'id': contract['id'],
+                'project_id': contract['project_id'],
+                'type': 'contract',
+                'content': 'Se han subido los documentos del proyecto.',
+                'created_at': contract['created_at'],
+                'project': {'name': projects_dict[contract['project_id']]},
+                'urls': {
+                    'contract_url': contract['contract_url'],
+                    'payment_url': contract['payment_url']
+                }
+            })
+
+        # Process updates into messages
+        for update in updates_response.data:
+            messages.append({
+                'id': update['id'],
+                'project_id': update['project_id'],
+                'type': 'update',
+                'content': update['update'],
+                'created_at': update['created_at'],
+                'project': {'name': projects_dict[update['project_id']]}
+            })
+
+        # Sort messages by created_at in descending order
+        messages.sort(key=lambda x: x['created_at'], reverse=True)
+
+        return jsonify(messages), 200
+
+    except Exception as e:
+        print(f"Error getting messages: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/projects/<string:project_id>', methods=['GET'])
+@jwt_required()
+def get_project(project_id):
+    if not is_valid_uuid(project_id):
+        return jsonify({"error": "ID de proyecto inválido"}), 400
+
+    try:
+        current_user = get_jwt_identity()
+        
+        # Get project details
+        project_response = supabase.table('projects').select('*').eq('id', project_id).execute()
+        
+        if not project_response.data:
+            return jsonify({"error": "Proyecto no encontrado"}), 404
+
+        return jsonify(project_response.data[0]), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# Ruta para crear un proyecto
-@app.route('/api/projects', methods=['POST'])
-def create_project():
-    data = request.json
-    name = data.get('name')
-    description = data.get('description')
-    user_id = data.get('user_id')
-
-    if not (name and description and user_id):
-        return jsonify({"error": "Todos los campos son obligatorios"}), 400
+@app.route('/api/projects/<string:project_id>/documents', methods=['GET'])
+@jwt_required()
+def get_project_documents(project_id):
+    if not is_valid_uuid(project_id):
+        return jsonify({"error": "ID de proyecto inválido"}), 400
 
     try:
-        response = supabase.table('projects').insert({
-            "name": name,
-            "description": description,
-            "status": "pending",
-            "user_id": user_id
-        }).execute()
-        return jsonify({"message": "Proyecto creado exitosamente", "project": response.data}), 201
+        current_user = get_jwt_identity()
+        
+        # Get project details to verify ownership
+        project_response = supabase.table('projects').select('*').eq('id', project_id).execute()
+        
+        if not project_response.data:
+            return jsonify({"error": "Proyecto no encontrado"}), 404
+
+        # Get contract documents
+        contract_response = supabase.table('contracts').select('*').eq('project_id', project_id).execute()
+        
+        return jsonify(contract_response.data), 200
+
     except Exception as e:
+        print(f"Error getting project documents: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+
     
 @app.route("/api/add-project", methods=["POST"])
 @jwt_required()
@@ -226,7 +409,7 @@ def add_project():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/api/cancel-project/<project_id>", methods=["DELETE"])
+@app.route("/api/cancel-project/<string:project_id>", methods=["DELETE"])
 @jwt_required()
 def cancel_project(project_id):
     try:

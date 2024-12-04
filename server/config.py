@@ -4,18 +4,36 @@ from supabase import create_client, Client
 
 class Config:
     load_dotenv()
-    # Configuración básica de la aplicación Flask
+    # Basic Flask app configuration
     SECRET_KEY = os.environ.get("SECRET_KEY", os.getenv("SECRET_KEY"))
     
-    # Configuración de Supabase
+    # Supabase configuration
     SUPABASE_URL = os.environ.get("SUPABASE_URL", os.getenv("SUPABASE_URL"))
-    SUPABASE_KEY = os.environ.get("SUPABASE_KEY", os.getenv("SUPABASE_KEY"))
+    SUPABASE_SERVICE_KEY = os.getenv("SECRET_KEY")  # Use service role key for admin access
     
     @staticmethod
     def get_supabase_client() -> Client:
-        if not Config.SUPABASE_URL or not Config.SUPABASE_KEY:
-            raise ValueError("Supabase URL y Key deben configurarse")
-        return create_client(Config.SUPABASE_URL, Config.SUPABASE_KEY)
+        if not Config.SUPABASE_URL or not Config.SUPABASE_SERVICE_KEY:
+            raise ValueError("Supabase URL and Service Key must be configured")
+        return create_client(Config.SUPABASE_URL, Config.SUPABASE_SERVICE_KEY)
 
-# Crea una instancia del cliente Supabase para que esté disponible globalmente
+def create_bucket_if_not_exists(client: Client, bucket_name: str) -> bool:
+    try:
+        buckets = client.storage.list_buckets()
+        if not any(bucket.name == bucket_name for bucket in buckets):
+            client.storage.create_bucket(bucket_name, options={
+                'public': True,
+                'file_size_limit': 52428800,  # 50MB in bytes
+                'allowed_mime_types': [
+                    'image/jpeg',
+                    'image/png',
+                    'application/pdf'
+                ]
+            })
+        return True
+    except Exception as e:
+        print(f"Error creating bucket: {str(e)}")
+        return False
+
+# Create a global Supabase client instance
 supabase = Config.get_supabase_client()
